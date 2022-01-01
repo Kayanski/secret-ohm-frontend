@@ -1,0 +1,105 @@
+<template>
+  <div class="container">
+    <div class="row balance">
+      <div class="col">
+        Balance: 
+        <span 
+          v-if="tokenBalance===null" 
+          class="view-balance-button"
+          @click="addViewingKey"
+        >
+          🔍 View Balance
+        </span>
+        <span v-else>
+          {{ tokenBalance }}
+        </span>
+      </div>
+    </div>
+    <div class="row input-group-token">
+      <div class="input-group col-xs-10 col-md-5 col-8">
+        <input
+          type="number"
+          step="0.000001"
+          class="form-control"
+          :placeholder="tokenText"
+          aria-label="Recipient's username"
+          aria-describedby="basic-addon2"
+        />
+        <div class="input-group-append">
+          <span class="input-group-text" id="basic-addon2">Max</span>
+        </div>
+      </div>
+      <button class="btn btn-outline-primary" type="button">Bond</button>
+    </div>
+  </div>
+  <div class="row percentages"></div>
+</template>
+
+<script>
+export default {
+  name: "token-input",
+  data() {
+    return {};
+  },
+  props: {
+    token: {
+      type: Object,
+      description: "Token properties",
+      default: undefined,
+    },
+  },
+  computed: {
+    tokenText() {
+      console.log(this.token);
+      return this.token.name + " Amount";
+    },
+    tokenBalance() {
+      return null;
+    }
+  },
+  methods:{
+    addViewingKey(){
+      this.suggestToken(this.token.name,this.token.address);
+    }
+  }
+};
+</script>
+<style>
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  /* display: none; <- Crashes Chrome on hover */
+  -webkit-appearance: none;
+  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+#basic-addon2 {
+  color: black;
+  cursor: pointer;
+}
+#basic-addon2:hover {
+  color: #ffa300;
+}
+.input-group-text {
+  border-right: 1px solid #cad1d7 !important;
+  border-top: 1px solid #cad1d7 !important;
+  border-bottom: 1px solid #cad1d7 !important;
+}
+.input-group-token{
+  justify-content: center;
+}
+.balance{
+  margin-bottom: 1em;
+  text-align: right;
+}
+.view-balance-button{
+  cursor: pointer;
+  padding: 0.1em;
+  border-radius: 5px;
+}
+.view-balance-button:hover{
+  background: rgba(0,0,0,0.06);
+}
+</style>

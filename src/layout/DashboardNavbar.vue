@@ -5,6 +5,7 @@
     :show-toggle-button="false"
     expand
   >
+    <!--
     <form
       class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto"
     >
@@ -18,52 +19,69 @@
         </base-input>
       </div>
     </form>
-    <ul class="navbar-nav align-items-center d-none d-md-flex">
+-->
+    <ul class="navbar-nav align-items-center d-none d-lg-flex">
       <li class="nav-item dropdown">
         <base-dropdown class="nav-link pr-0">
           <template v-slot:title>
-            <div class="media align-items-center">
+            <div class="media align-items-center pointed">
               <span class="avatar avatar-sm rounded-circle">
-                <img
-                  alt="Image placeholder"
-                  src="img/theme/team-4-800x800.jpg"
-                />
+                <img alt="Image placeholder" src="img/theme/token-img.jpg" />
               </span>
-              <div class="media-body ml-2 d-none d-lg-block">
-                <span class="mb-0 text-sm font-weight-bold">Jessica Jones</span>
+              <div class="media-body ml-2 d-block">
+                <span class="mb-0 text-sm font-weight-bold">Token</span>
               </div>
             </div>
           </template>
-          <div class="dropdown-header noti-title">
-            <h6 class="text-overflow m-0">Welcome!</h6>
-          </div>
-          <router-link to="/profile" class="dropdown-item">
-            <i class="ni ni-single-02"></i>
-            <span>My profile</span>
-          </router-link>
-          <router-link to="/profile" class="dropdown-item">
-            <i class="ni ni-settings-gear-65"></i>
-            <span>Settings</span>
-          </router-link>
-          <router-link to="/profile" class="dropdown-item">
-            <i class="ni ni-calendar-grid-58"></i>
-            <span>Activity</span>
-          </router-link>
-          <router-link to="/profile" class="dropdown-item">
-            <i class="ni ni-support-16"></i>
-            <span>Support</span>
-          </router-link>
+          <a class="dropdown-item" :href="secretswapTokenLink()">
+            <i class="ni ni-money-coins"></i>
+            <span>Buy on SecretSwap</span>
+          </a>
           <div class="dropdown-divider"></div>
-          <router-link to="/profile" class="dropdown-item">
-            <i class="ni ni-user-run"></i>
-            <span>Logout</span>
-          </router-link>
+          <div class="dropdown-header noti-title">
+            <h6 class="text-overflow m-0">Register Tokens in Keplr</h6>
+          </div>
+          <div class="dropdown-divider"></div>
+
+          <div class="dropdown-item pointed" @click="suggestMainToken">
+            <i class="ni ni-single-02"></i>
+            <span>{{ tokenName }}</span>
+          </div>
+
+          <div class="dropdown-item pointed" @click="suggestSToken">
+            <i class="ni ni-single-02"></i>
+            <span>s{{ tokenName }}</span>
+          </div>
         </base-dropdown>
+      </li>
+    </ul>
+    <ul class="navbar-nav align-items-center d-none d-lg-flex connect-keplr">
+      <li class="nav-item nav-link pr-0" @click="connectKeplr">
+        <div class="media align-items-center pointed">
+          <span class="">
+            <img
+              alt="Image placeholder"
+              src="https://res.cloudinary.com/hv5cxagki/image/upload/ar_1,c_scale,dpr_2,f_auto,h_14,q_auto/v1/logos/b8thbiihwftyjolgjjz2_dhy5mr"
+            />
+          </span>
+          <div class="media-body ml-2 d-block">
+            <span v-if="!keplrConnected" class="mb-0 text-sm font-weight-bold"
+              >Connect Keplr</span
+            >
+            <span v-else class="mb-0 text-sm font-weight-bold"
+              >{{ displayAddress }} | <strong>{{ tokenBalance }}</strong>
+              {{ tokenName }}</span
+            >
+          </div>
+        </div>
       </li>
     </ul>
   </base-nav>
 </template>
 <script>
+//import SigningCosmWasmClient from "secretjs";
+import TokenStore from "@/token-store";
+
 export default {
   data() {
     return {
@@ -71,6 +89,17 @@ export default {
       showMenu: false,
       searchQuery: "",
     };
+  },
+  computed: {
+    displayAddress() {
+      return this.addressText(TokenStore.userAddress);
+    },
+    keplrConnected() {
+      return TokenStore.keplrConnected;
+    },
+    tokenBalance() {
+      return TokenStore.tokenBalance;
+    },
   },
   methods: {
     toggleSidebar() {
@@ -85,3 +114,21 @@ export default {
   },
 };
 </script>
+<style>
+.pointed {
+  cursor: pointer;
+}
+.connect-keplr {
+  border: 2px solid black;
+  padding: 0px 10px;
+  border-radius: 5px;
+  margin-left: 5em;
+  background: linear-gradient(87deg, #2dce89 0, #2dcecc 100%) !important;
+}
+.token-info-bar {
+  justify-content: end;
+}
+.view-notification-group {
+  margin-top: 5px;
+}
+</style>

@@ -16,44 +16,44 @@
 
         <sidebar-item
           :link="{
-            name: 'Icons',
+            name: 'Bond',
             icon: 'ni ni-planet text-blue',
-            path: '/icons',
+            path: '/bonds',
           }"
         />
         <sidebar-item
           :link="{
-            name: 'Maps',
+            name: 'Stake',
             icon: 'ni ni-pin-3 text-orange',
-            path: '/maps',
+            path: '/stake',
           }"
         />
         <sidebar-item
           :link="{
-            name: 'User Profile',
+            name: 'Calculator',
             icon: 'ni ni-single-02 text-yellow',
-            path: '/profile',
+            path: '/calculator',
           }"
         />
         <sidebar-item
           :link="{
-            name: 'Tables',
+            name: 'Meet the Team',
             icon: 'ni ni-bullet-list-67 text-red',
-            path: '/tables',
+            path: '/stake',
           }"
         />
         <sidebar-item
           :link="{
-            name: 'Login',
+            name: 'Docs',
             icon: 'ni ni-key-25 text-info',
-            path: '/login',
+            path: '/stake',
           }"
         />
         <sidebar-item
           :link="{
-            name: 'Register',
+            name: 'Github',
             icon: 'ni ni-circle-08 text-pink',
-            path: '/register',
+            path: '/stake',
           }"
         />
       </template>

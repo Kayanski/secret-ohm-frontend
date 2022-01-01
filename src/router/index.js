@@ -1,16 +1,13 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 
 import DashboardLayout from "@/layout/DashboardLayout";
-import AuthLayout from "@/layout/AuthLayout";
 
 import Dashboard from "../views/Dashboard.vue";
-import Icons from "../views/Icons.vue";
-import Maps from "../views/Maps.vue";
-import Profile from "../views/UserProfile.vue";
-import Tables from "../views/Tables.vue";
+import Bonds from "../views/Bonds.vue";
+import GetBond from "../views/GetBond.vue";
+import Stake from "../views/Stake.vue";
+import Calculator from "../views/Calculator.vue";
 
-import Login from "../views/Login.vue";
-import Register from "../views/Register.vue";
 
 const routes = [
   {
@@ -24,41 +21,29 @@ const routes = [
         components: { default: Dashboard },
       },
       {
-        path: "/icons",
-        name: "icons",
-        components: { default: Icons },
+        path: "/bonds",
+        name: "bonds",
+        components: { default: Bonds },
+        children: [
+          {
+            path: ":bondId",
+            component: GetBond,
+            props: true,
+            meta: {
+              showModal: true,
+            },
+          },
+        ],
       },
       {
-        path: "/maps",
-        name: "maps",
-        components: { default: Maps },
+        path: "/stake",
+        name: "stake",
+        components: { default: Stake },
       },
       {
-        path: "/profile",
-        name: "profile",
-        components: { default: Profile },
-      },
-      {
-        path: "/tables",
-        name: "tables",
-        components: { default: Tables },
-      },
-    ],
-  },
-  {
-    path: "/",
-    redirect: "login",
-    component: AuthLayout,
-    children: [
-      {
-        path: "/login",
-        name: "login",
-        components: { default: Login },
-      },
-      {
-        path: "/register",
-        name: "register",
-        components: { default: Register },
+        path: "/calculator",
+        name: "calculator",
+        components: { default: Calculator },
       },
     ],
   },

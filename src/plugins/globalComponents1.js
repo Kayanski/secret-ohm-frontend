@@ -16,8 +16,6 @@ import Modal from "../components/Modal";
 import StatsCard from "../components/StatsCard";
 import TabPane from "../components/Tabs/TabPane";
 import Tabs from "../components/Tabs/Tabs";
-import InfoField from "../components/InfoField";
-import TokenInput from "../components/TokenInput";
 
 import { ElTooltip, ElPopover } from "element-plus";
 
@@ -41,8 +39,6 @@ const GlobalComponents = {
     app.component("stats-card", StatsCard);
     app.component("tab-pane", TabPane);
     app.component("tabs", Tabs);
-    app.component("token-input", TokenInput,{emits:["submitTokenInput"]});
-    app.component("info-field", InfoField);
     app.use(ElTooltip);
     app.use(ElPopover);
   },

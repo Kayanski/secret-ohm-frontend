@@ -1,68 +1,67 @@
 <template>
   <div>
-    <base-header type="gradient-success" class="pb-6 pb-8 pt-5 pt-md-8">
+    <base-header type="gradient-success" class="pb-6 pb-8 pt-5 pt-lg-7">
       <div class="row">
-        <div class="col-xl-3 col-lg-6">
+        <div class="col-xs-12 col-sm-6 col-xl-4 col-lg-4">
           <stats-card
-            title="Total traffic"
+            title="Market Cap"
             type="gradient-red"
             sub-title="350,897"
-            icon="ni ni-active-40"
-            class="mb-4 mb-xl-0"
+            class="mb-4"
           >
-            <template v-slot:footer>
-              <span class="text-success mr-2">
-                <i class="fa fa-arrow-up"></i> 3.48%
-              </span>
-              <span class="text-nowrap">Since last month</span>
+            <template v-slot:valueSlot>
+              <info-field infoId="marketcap" />
             </template>
           </stats-card>
         </div>
-        <div class="col-xl-3 col-lg-6">
+        <div class="col-xs-12 col-sm-6 col-xl-4 col-lg-4">
           <stats-card
-            title="Total traffic"
+            :title="tokenPriceText()"
             type="gradient-orange"
-            sub-title="2,356"
-            icon="ni ni-chart-pie-35"
-            class="mb-4 mb-xl-0"
+            sub-title="true"
+            class="mb-4"
           >
-            <template v-slot:footer>
-              <span class="text-success mr-2">
-                <i class="fa fa-arrow-up"></i> 12.18%
-              </span>
-              <span class="text-nowrap">Since last month</span>
+            <template v-slot:valueSlot>
+              <info-field
+                infoId="token-price"
+                :options="{ address: tokenContractAddress }"
+              />
             </template>
           </stats-card>
         </div>
-        <div class="col-xl-3 col-lg-6">
+        <div class="col-xs-12 col-sm-6 col-xl-4 col-lg-4">
           <stats-card
-            title="Sales"
+            title="Circulating Supply"
+            type="gradient-red"
+            sub-title="350,897"
+            class="mb-4"
+          >
+            <template v-slot:valueSlot>
+              <info-field infoId="Circulating-supply-total" />
+            </template>
+          </stats-card>
+        </div>
+        <div class="col-xs-12 col-sm-6 col-xl-4 col-lg-4">
+          <stats-card
+            :title="'Backing per ' + tokenName"
+            type="gradient-red"
+            sub-title="350,897"
+            class="mb-4"
+          >
+            <template v-slot:valueSlot>
+              <info-field infoId="backing-per-token" />
+            </template>
+          </stats-card>
+        </div>
+        <div class="col-xs-12 col-xl-8 col-lg-8">
+          <stats-card
+            title="Current Index"
             type="gradient-green"
             sub-title="924"
-            icon="ni ni-money-coins"
-            class="mb-4 mb-xl-0"
+            class="mb-4"
           >
-            <template v-slot:footer>
-              <span class="text-danger mr-2">
-                <i class="fa fa-arrow-down"></i> 5.72%
-              </span>
-              <span class="text-nowrap">Since last month</span>
-            </template>
-          </stats-card>
-        </div>
-        <div class="col-xl-3 col-lg-6">
-          <stats-card
-            title="Performance"
-            type="gradient-info"
-            sub-title="49,65%"
-            icon="ni ni-chart-bar-32"
-            class="mb-4 mb-xl-0"
-          >
-            <template v-slot:footer>
-              <span class="text-success mr-2">
-                <i class="fa fa-arrow-up"></i> 54.8%
-              </span>
-              <span class="text-nowrap">Since last month</span>
+            <template v-slot:valueSlot>
+              <info-field infoId="current-index" />
             </template>
           </stats-card>
         </div>
