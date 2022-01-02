@@ -57,7 +57,7 @@
               address: 'secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek',
             }"
             buttonText="Redeem"
-            @submitTokenInput="buyBond"
+            @submitTokenInput="redeemBond"
           />
         </form>
 
@@ -71,7 +71,9 @@
               {{ bondInfo.title }}
             </div>
             <div class="bond-info-value">
-              <info-field :infoId="bondInfo.id" />
+              <info-field :infoId="bondInfo.id" :options="{
+                bondName:this.bond.name
+              }" />
             </div>
           </div>
         </div>
@@ -207,6 +209,9 @@ export default {
     },
     buyBond(e){
       console.log("Bond : " + e);
+    },
+    redeemBond(e){
+      console.log("Redeem : " + e);
     }
   },
   beforeCreated() {

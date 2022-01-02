@@ -27,13 +27,29 @@ export default {
   computed: {
     infoText() {
       switch (this.infoId) {
+        //General Info
+        case "token-price":
+          return this.getTokenPriceInUSD(this.options.address);
+        case "treasury-balance":
+          return this.getTreasuryBalanceInUSD();
+
+        //User Info
+        case "token-balance":
+          return this.getTokenBalance(this.options.address);
+
+        //Bond Indo
+        case "bond-you-will-get":
+          return this.bondYouWillGet(this.options.name,this.options.amount);
         case "pending-rewards":
           return this.getPendingRewards();
         case "bond-price":
           //return this.getBondPrice(this.options.name);
           break;
-        case "token-price":
-          return this.getTokenPriceInUSD(this.options.address);
+        //Stake Info
+
+
+
+        //Calculator Info  
         case "initial-investment":
           return (
             this.options.amount * this.options.purchasePrice

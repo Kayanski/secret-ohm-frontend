@@ -88,7 +88,7 @@
         </div>
 
         <div class="col-xs-12 col-sm-12 col-md-auto">
-          <button class="btn btn-outline-primary btn-submit" @click="$emit('submitTokenInput')" type="submit">
+          <button class="btn btn-outline-primary btn-submit" type="submit">
             {{ buttonText }}
           </button>
         </div>

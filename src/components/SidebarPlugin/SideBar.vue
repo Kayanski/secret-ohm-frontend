@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="navbar navbar-vertical fixed-left navbar-expand-md navbar-light bg-white"
+    class="navbar navbar-vertical fixed-left navbar-expand-lg navbar-light bg-white"
     id="sidenav-main"
   >
     <div class="container-fluid">
@@ -13,49 +13,57 @@
       </router-link>
 
       <slot name="mobile-right">
-        <ul class="nav align-items-center d-md-none">
-          <base-dropdown class="nav-item" position="right">
+        <ul class="nav align-items-center d-lg-none">
+          <base-dropdown class="nav-link pr-0">
             <template v-slot:title>
-              <a
-                class="nav-link nav-link-icon"
-                href="#"
-                role="button"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                <i class="ni ni-bell-55"></i>
-              </a>
-            </template>
-
-            <a class="dropdown-item" href="#">Action</a>
-            <a class="dropdown-item" href="#">Another action</a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">Something else here</a>
-          </base-dropdown>
-          <base-dropdown class="nav-item" position="right">
-            <template v-slot:title>
-              <a class="nav-link" href="#" role="button">
-                <div class="media align-items-center">
-                  <span class="avatar avatar-sm rounded-circle">
-                    <img
-                      alt="Image placeholder"
-                      src="img/theme/team-1-800x800.jpg"
-                    />
-                  </span>
+              <div class="media align-items-center pointed">
+                <span class="avatar avatar-sm rounded-circle">
+                  <img alt="Image placeholder" src="img/theme/token-img.jpg" />
+                </span>
+                <div class="media-body ml-2 d-block">
+                  <span class="mb-0 text-sm font-weight-bold"></span>
                 </div>
-              </a>
+              </div>
             </template>
-
+            <a class="dropdown-item" :href="secretswapTokenLink()">
+              <i class="ni ni-money-coins"></i>
+              <span>Buy on SecretSwap</span>
+            </a>
+            <div class="dropdown-divider"></div>
             <div class="dropdown-header noti-title">
-              <h6 class="text-overflow m-0">Welcome!</h6>
+              <h6 class="text-overflow m-0">Register Tokens in Keplr</h6>
             </div>
             <div class="dropdown-divider"></div>
-            <a href="#!" class="dropdown-item">
-              <i class="ni ni-user-run"></i>
-              <span>Logout</span>
-            </a>
+
+            <div class="dropdown-item pointed" @click="suggestMainToken">
+              <i class="ni ni-single-02"></i>
+              <span>{{ tokenName }}</span>
+            </div>
+
+            <div class="dropdown-item pointed" @click="suggestSToken">
+              <i class="ni ni-single-02"></i>
+              <span>s{{ tokenName }}</span>
+            </div>
           </base-dropdown>
+          <li class="nav-item nav-link pr-0" @click="connectKeplr">
+            <div class="media align-items-center pointed">
+              <span class="">
+                <img
+                  alt="Image placeholder"
+                  src="https://res.cloudinary.com/hv5cxagki/image/upload/ar_1,c_scale,dpr_2,f_auto,h_14,q_auto/v1/logos/b8thbiihwftyjolgjjz2_dhy5mr"
+                />
+              </span>
+              <div class="media-body ml-2 d-block">
+                <span v-if="!keplrConnected" class="mb-0 text-sm font-weight-bold"
+                  >Connect Keplr</span
+                >
+                <span v-else class="mb-0 text-sm font-weight-bold"
+                  >{{ displayAddress }} | <strong>{{ tokenBalance }}</strong>
+                  {{ tokenName }}</span
+                >
+              </div>
+            </div>
+          </li>
         </ul>
       </slot>
       <slot></slot>
@@ -64,7 +72,7 @@
         class="navbar-collapse collapse show"
         id="sidenav-collapse-main"
       >
-        <div class="navbar-collapse-header d-md-none">
+        <div class="navbar-collapse-header d-lg-none">
           <div class="row">
             <div class="col-6 collapse-brand">
               <router-link to="/">
@@ -119,6 +127,7 @@
 </template>
 <script>
 import NavbarToggleButton from "@/components/NavbarToggleButton";
+import TokenStore from "@/token-store";
 
 export default {
   name: "sidebar",
@@ -136,6 +145,11 @@ export default {
       default: true,
       description:
         "Whether sidebar should autoclose on mobile when clicking an item",
+    },
+  },
+  computed: {
+    keplrConnected() {
+      return TokenStore.keplrConnected;
     },
   },
   provide() {

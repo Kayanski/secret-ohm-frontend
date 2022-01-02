@@ -27,7 +27,7 @@
 
       <div
         class="collapse navbar-collapse"
-        :class="{ show: toggled }"
+        :class="{ show: toggled ,'base-nav-container':true}"
         :id="contentId"
         v-click-outside="closeMenu"
       >
@@ -92,4 +92,8 @@ export default {
   },
 };
 </script>
-<style></style>
+<style>
+.base-nav-container{
+  justify-content:flex-end;
+}
+</style>

@@ -1,33 +1,48 @@
 <template>
   <div>
-    <base-header type="gradient-success" class="pb-6 pb-8 pt-5 pt-lg-7">
+    <base-header type="gradient-success" class="pb-6 pb-8 pt-5 pt-lg-8">
       <!-- Card stats -->
       <div class="row">
-        <div class="col-lg-6">
+        <div class="col-lg-4 col-md-6">
           <stats-card
-            title="Treasury Balance"
+            title="APY"
             type="gradient-red"
-            sub-title="true"
-            class="mb-4"
+            sub-title="350,897"
+            class="mb-4 mb-xl-0"
           >
-            <template v-slot:valueSlot>
-              <info-field infoId="treasury-balance" />
-            </template>
+            <template v-slot:valueSlot >
+              <info-field
+                infoId="apy"
+              />
+            </template> 
           </stats-card>
         </div>
-        <div class="col-lg-6">
+        <div class="col-lg-4 col-md-6">
           <stats-card
-            :title="tokenPriceText()"
+            title="Total Value Deposited"
             type="gradient-orange"
-            sub-title="true"
-            class="mb-4"
+            sub-title="2,356"
+            class="mb-4 mb-xl-0"
           >
-            <template v-slot:valueSlot>
+            <template v-slot:valueSlot >
               <info-field
-                infoId="token-price"
-                :options="{ address: tokenContractAddress }"
+                infoId="total-value-deposited"
               />
-            </template>
+            </template> 
+          </stats-card>
+        </div>
+        <div class="col-lg-4 col-md-12">
+          <stats-card
+            title="Current Index"
+            type="gradient-green"
+            sub-title="924"
+            class="mb-4 mb-xl-0"
+          >
+            <template v-slot:valueSlot >
+              <info-field
+                infoId="current-index"
+              />
+            </template> 
           </stats-card>
         </div>
       </div>
@@ -36,285 +51,131 @@
     <div class="container-fluid mt--7">
       <div class="row">
         <div class="col">
-          <div class="card shadow d-none d-md-flex">
+          <div class="card shadow d-md-flex">
             <div class="card-header bg-transparent">
-              <h3 class="mb-0">Bonds (1,1)</h3>
+              <h3 class="mb-0">Stake {{ tokenName }} (3,3)</h3>
+                <info-field
+                  infoId="time-till-next-rebase"
+                />
             </div>
-            <div class="card-body bond-table">
-              <div class="col-12 row bond-header bond-row">
-                <div class="col-2 bond-icon"></div>
-                <div class="col-2 bond-table-item bond-name">
-                  <strong>Bond</strong>
-                </div>
-                <div class="col-3 d-flex bond-table-item">
-                  <div class="col-6 bond-table-item bond-price">
-                    <strong>Price</strong>
-                  </div>
-                  <div class="col-6 bond-table-item bond-roi">
-                    <strong>ROI</strong>
-                  </div>
-                </div>
-                <div class="col-3 bond-table-item bond-purchased">
-                  <strong>Purchased</strong>
-                </div>
-              </div>
-              <div
-                class="col-12 row bond-row"
-                v-for="(bond, index) in bonds"
-                :key="index"
-              >
-                <div class="col-2 bond-table-item bond-icon">
-                  <div class="icons-container">
-                    <span
-                      class="rounded-circle bond-icon"
-                      v-for="(icon, index) in bond.icons"
-                      :key="icon + index"
-                      :class="{
-                        firstTokenInBond: index === 0 && bond.icons.length > 1,
-                        secondTokenInBond: index === 1,
-                      }"
-                    >
-                      <img
-                        alt="bond.name"
-                        :src="icon"
-                        class="token-icon rounded-circle"
-                      />
-                    </span>
-                  </div>
-                </div>
-                <div class="col-2 bond-table-item bond-name">
-                  <strong>
-                    {{ bond.name }}
-                  </strong>
-                </div>
-                <div class="col-3 bond-table-item d-flex">
-                  <div class="col-6 bond-table-item bond-price">
-                    <strong>
-                      ${{
-                        bond.price.toLocaleString(undefined, {
-                          maximumFractionDigits: 1,
-                        })
-                      }}
-                    </strong>
-                  </div>
-                  <div class="col-6 bond-table-item bond-roi">
-                    {{ ROIPercent(bond.ROI) }}
-                  </div>
-                </div>
-                <div class="col-3 bond-table-item bond-purchased">
-                  ${{
-                    bond.totalPurchased.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })
-                  }}
-                </div>
-                <el-tooltip
-                  placement="top"
-                  :content="tooltipText(bond)"
-                  class="col-2"
-                >
-                  <router-link :to="bondLink(bond)">
-                    <button class="btn btn-secondary">Bond</button>
-                  </router-link>
-                </el-tooltip>
-              </div>
-            </div>
-          </div>
-          <div class="bond-square-container">
-            <div
-              class="card shadow d-flex d-md-none bond-square col-12"
-              v-for="(bond, index) in bonds"
-              :key="bond + index"
-            >
-              <div class="card-body bond-table d-flex d-md-none">
-                <div class="bond-icon-name row">
-                  <div class="bond-icon bond-table-item">
-                    <div class="square-icons-container">
-                      <span
-                        class="rounded-circle bond-icon"
-                        v-for="(icon, index) in bond.icons"
-                        :key="icon + index"
-                        :class="{
-                          firstTokenInBond:
-                            index === 0 && bond.icons.length > 1,
-                          secondTokenInBond: index === 1,
+
+            <div class="card-body">
+              <tabs type="warning" :pills="false" :fill="true" tabNavClasses="stake-tabs">
+                <tab-pane title="Stake">
+                  <div class="get-bond-container container">
+                      <token-input
+                        :token="{
+                          name: tokenName,
+                          address: tokenContractAddress,
                         }"
+                        buttonText="Stake"
+                        @submitTokenInput="stake"
+                      />
+                    <div class="row stake-info-container">
+                      <div
+                        v-for="stakeInfo in stakeInfoToDisplay"
+                        :key="stakeInfo.title"
+                        class="stake-info"
                       >
-                        <img
-                          alt="bond.name"
-                          :src="icon"
-                          class="token-icon rounded-circle"
-                        />
-                      </span>
+                        <div class="stake-info-title">
+                          {{ stakeInfo.title }}
+                        </div>
+                        <div class="stake-info-value">
+                          <info-field :infoId="stakeInfo.id" :options="stakeInfo.options" />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-4 bond-table-item bond-name">
-                    <strong>
-                      {{ bond.name }}
-                    </strong>
+                </tab-pane>
+                <tab-pane title="Unstake">
+                  <div class="get-bond-container container">
+                      <token-input
+                        :token="{
+                          name: 's' +tokenName,
+                          address: sTokenContractAddress,
+                        }"
+                        buttonText="Unstake"
+                        @submitTokenInput="unstake"
+                      />
+                    <div class="row stake-info-container">
+                      <div
+                        v-for="stakeInfo in stakeInfoToDisplay"
+                        :key="stakeInfo.title"
+                        class="stake-info"
+                      >
+                        <div class="stake-info-title">
+                          {{ stakeInfo.title }}
+                        </div>
+                        <div class="stake-info-value">
+                          <info-field :infoId="stakeInfo.id" :options="stakeInfo.options" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="row bond-square-property">
-                  <div class="bond-table-item">Price</div>
-                  <div class="bond-table-item">
-                    ${{
-                      bond.price.toLocaleString(undefined, {
-                        maximumFractionDigits: 1,
-                      })
-                    }}
-                  </div>
-                </div>
-                <div class="row bond-square-property">
-                  <div class="bond-table-item">ROI</div>
-                  <div class="bond-table-item">
-                    {{ ROIPercent(bond.ROI) }}
-                  </div>
-                </div>
-
-                <div class="row bond-square-property">
-                  <div class="bond-table-item">Purchased</div>
-                  <div class="bond-table-item">
-                    ${{
-                      bond.totalPurchased.toLocaleString(undefined, {
-                        maximumFractionDigits: 0,
-                      })
-                    }}
-                  </div>
-                </div>
-                <el-tooltip
-                  placement="top"
-                  :content="tooltipText(bond)"
-                  class="col-12"
-                >
-                  <router-link :to="bondLink(bond)">
-                    <button class="btn btn-secondary bond-button">
-                      Bond {{ bond.name }}
-                    </button>
-                  </router-link>
-                </el-tooltip>
-              </div>
+                </tab-pane>
+              </tabs>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div v-if="showModal" class="modal-route">
-      <div class="modal-content-custom">
-        <router-view></router-view>
-      </div>
-    </div>
   </div>
 </template>
-
 <script>
 export default {
   data() {
     return {
-      showModal: false,
+      stakeInfoToDisplay: [
+        {
+          title: "Your Balance",
+          id: "token-balance",
+          options: {
+            name: this.tokenName,
+          },
+        },
+        {
+          title: "Your Staked Balance",
+          id: "token-balance",
+          options: {
+            name: "s" + this.stokenName,
+          },
+        },
+        {
+          title: "Next Reward Amount",
+          id: "newt-reward-amount",
+        },
+        {
+          title: "Next Reward Yield",
+          id: "next-reward-yield"
+        },
+        {
+          title: "ROI (5-Day Rate)",
+          id: "staking-roi"
+        },
+      ]
     };
   },
-  methods: {
-    onCopy(el) {
-      var test = document.getElementById(el);
-      test.select();
-      document.execCommand("copy");
+  methods:{
+    stake(e){
+      console.log("Stake : " + e)
     },
-    ROIPercent(ROI) {
-      return ROI.toLocaleString(undefined, {
-        style: "percent",
-        minimumFractionDigits: 2,
-      });
-    },
-    tooltipText(bond) {
-      return "Save " + this.ROIPercent(bond.ROI);
-    },
-    bondLink(bond) {
-      return "/bonds/" + bond.id;
-    },
-  },
-  watch: {
-    $route: {
-      immediate: true,
-      handler: function (newVal) {
-        this.showModal = newVal.meta && newVal.meta.showModal;
-      },
-    },
-  },
+    unstake(e){
+      console.log("Unstake : " + e)
+    }
+  }
 };
 </script>
-
 <style>
-.bond-row {
-  align-items: center;
-  text-align: center;
-}
-.bond-table {
+  
+.stake-info {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  justify-content: space-between;
+  padding: 0.2em 1em;
+  width: 100%;
+  font-weight: 560;
   font-size: 0.9em;
 }
-.bond-header {
-  color: grey;
-}
-.token-icon {
-  width: 35px;
-  height: 35px;
-}
-.firstTokenInBond .secondTokenInBond {
-  min-width: 70px;
-}
-.firstTokenInBond {
-  position: relative;
-  right: -2px;
-}
-.secondTokenInBond {
-  position: relative;
-  left: -2px;
-}
-.bond-table-item {
-  padding: 0px !important;
-}
-.bond-square-container {
-}
-.bond-square {
-  margin-bottom: 15px;
-}
-.bond-icon-name {
-  align-items: center;
-  margin-left: 2em !important;
-}
-.bond-square-property {
-  justify-content: space-between;
-  padding: 0em 1.5em;
-  font-weight: bold;
-}
-.bond-button {
-  width: 100%;
-}
-.square-icons-container {
-  margin-right: 1.5em;
-}
-/*Modal Style*/
-.modal-route {
-  width: 100%;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 0px;
-  z-index: 1;
-}
-.modal-content-custom {
-  width: 90%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 803px;
-}
+
+
+
 </style>

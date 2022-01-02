@@ -152,7 +152,24 @@ let tokenProperties = {
       maximumFractionDigits: decimals,
     });
   },
+
   /* helpers to get infos from the blockchain */
+  //General Info
+  getTreasuryBalanceInUSD(){
+    return null;
+  },
+
+  //User Info
+  getTokenBalance(address){
+    address;
+    return null;
+  },
+
+  //Bond Info
+  bondYouWillGet(name,amount){
+    name;
+    return amount;
+  },
 
   getPendingRewards() {
     return this.formatNumber(0.0, 5) + " OHM";

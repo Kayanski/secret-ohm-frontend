@@ -5,22 +5,7 @@
     :show-toggle-button="false"
     expand
   >
-    <!--
-    <form
-      class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto"
-    >
-      <div class="form-group mb-0">
-        <base-input
-          placeholder="Search"
-          class="input-group-alternative"
-          alternative=""
-          addon-right-icon="fas fa-search"
-        >
-        </base-input>
-      </div>
-    </form>
--->
-    <ul class="navbar-nav align-items-center d-none d-lg-flex">
+    <ul class="navbar-nav align-items-right d-none d-lg-flex">
       <li class="nav-item dropdown">
         <base-dropdown class="nav-link pr-0">
           <template v-slot:title>
