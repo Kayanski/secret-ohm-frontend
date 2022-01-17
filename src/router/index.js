@@ -8,7 +8,6 @@ import GetBond from "../views/GetBond.vue";
 import Stake from "../views/Stake.vue";
 import Calculator from "../views/Calculator.vue";
 
-
 const routes = [
   {
     path: "/",

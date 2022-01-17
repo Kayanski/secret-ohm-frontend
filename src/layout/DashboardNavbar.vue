@@ -10,8 +10,11 @@
         <base-dropdown class="nav-link pr-0">
           <template v-slot:title>
             <div class="media align-items-center pointed">
-              <span class="avatar avatar-sm rounded-circle">
-                <img alt="Image placeholder" src="img/theme/token-img.jpg" />
+              <span class="avatar avatar-sm rounded-circle token-circle">
+                <object type="image/svg+xml" data="img/theme/svg.svg">
+                  Kiwi Logo
+                  <!-- fallback image in CSS -->
+                </object>
               </span>
               <div class="media-body ml-2 d-block">
                 <span class="mb-0 text-sm font-weight-bold">Token</span>
@@ -41,7 +44,7 @@
       </li>
     </ul>
     <ul class="navbar-nav align-items-center d-none d-lg-flex connect-keplr">
-      <li class="nav-item nav-link pr-0" @click="connectKeplr">
+      <li class="nav-item nav-link pr-0 pl-2" @click="connectKeplr">
         <div class="media align-items-center pointed">
           <span class="">
             <img
@@ -54,9 +57,8 @@
               >Connect Keplr</span
             >
             <span v-else class="mb-0 text-sm font-weight-bold"
-              >{{ displayAddress }} | <strong>{{ tokenBalance }}</strong>
-              {{ tokenName }}</span
-            >
+              >{{ displayAddress }}
+            </span>
           </div>
         </div>
       </li>
@@ -64,8 +66,7 @@
   </base-nav>
 </template>
 <script>
-//import SigningCosmWasmClient from "secretjs";
-import TokenStore from "@/token-store";
+import * as KeplrClient from "@/client";
 
 export default {
   data() {
@@ -73,17 +74,15 @@ export default {
       activeNotifications: false,
       showMenu: false,
       searchQuery: "",
+      keplrConnected: false,
     };
   },
   computed: {
     displayAddress() {
-      return this.addressText(TokenStore.userAddress);
-    },
-    keplrConnected() {
-      return TokenStore.keplrConnected;
+      return KeplrClient.getUserAddressText();
     },
     tokenBalance() {
-      return TokenStore.tokenBalance;
+      return KeplrClient.getBalance("OHM");
     },
   },
   methods: {
@@ -95,6 +94,14 @@ export default {
     },
     toggleMenu() {
       this.showMenu = !this.showMenu;
+    },
+    async connectKeplr() {
+      KeplrClient.initSigningClient()
+        .then(() => {
+          console.log("initclient");
+          this.keplrConnected = KeplrClient.keplrConnected();
+        })
+        .catch((error) => console.log(error));
     },
   },
 };
@@ -115,5 +122,8 @@ export default {
 }
 .view-notification-group {
   margin-top: 5px;
+}
+.token-circle {
+  background-color: #f7f7f7 !important;
 }
 </style>

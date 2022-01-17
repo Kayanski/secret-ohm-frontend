@@ -25,7 +25,7 @@
             <template v-slot:valueSlot>
               <info-field
                 infoId="token-price"
-                :options="{ address: tokenContractAddress }"
+                :options="{ tokenName: tokenName }"
               />
             </template>
           </stats-card>

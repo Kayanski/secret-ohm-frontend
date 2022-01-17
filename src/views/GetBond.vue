@@ -6,21 +6,17 @@
     <div class="price">
       <div class="bond-prices-label">Bond Price</div>
       <div class="bond-prices-value">
-        <info-field infoId="bond-price" :options="{ name: bond.name }" />
+        <info-field infoId="bond-price" :options="{ bondName: bond.name }" />
       </div>
     </div>
     <div class="price">
       <div class="bond-prices-label">{{ tokenName }} Price</div>
       <div class="bond-prices-value">
-        <info-field
-          infoId="token-price"
-          :options="{ address: tokenContractAddress }"
-        />
+        <info-field infoId="token-price" :options="{ tokenName: tokenName }" />
       </div>
     </div>
   </div>
   <tabs type="warning" :pills="false" :fill="true" tabNavClasses="bond-tabs">
-    <!-- <tabs :options="{ useUrlFragment: false }" > -->
     <tab-pane title="Bond">
       <div class="get-bond-container container">
         <token-input
@@ -30,6 +26,7 @@
           }"
           buttonText="Bond"
           @submitTokenInput="buyBond"
+          @tokenInput="tokenInputValue = $event"
         />
 
         <div class="row bond-info-container">
@@ -42,7 +39,13 @@
               {{ bondInfo.title }}
             </div>
             <div class="bond-info-value">
-              <info-field :infoId="bondInfo.id" :options="bondInfo.options" />
+              <info-field
+                :infoId="bondInfo.id"
+                :options="{
+                  bondName: bond.name,
+                  amount: tokenInputValue,
+                }"
+              />
             </div>
           </div>
         </div>
@@ -71,9 +74,12 @@
               {{ bondInfo.title }}
             </div>
             <div class="bond-info-value">
-              <info-field :infoId="bondInfo.id" :options="{
-                bondName:this.bond.name
-              }" />
+              <info-field
+                :infoId="bondInfo.id"
+                :options="{
+                  bondName: bond.name,
+                }"
+              />
             </div>
           </div>
         </div>
@@ -93,91 +99,55 @@ export default {
         {
           title: "Your Balance",
           id: "token-balance",
-          options: {
-            name: bond.name,
-          },
         },
         {
           title: "You Will Get",
           id: "bond-you-will-get",
-          options: {
-            bondName: bond.name,
-            amount: this.tokenInputValue,
-          },
         },
         {
           title: "Max You Can Buy",
           id: "max-you-can-buy-bond",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "ROI",
           id: "bond-roi",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "Debt Ratio",
           id: "bond-debt-ratio",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "Vesting Term",
           id: "bond-vesting-term",
-          options: {
-            bondName: bond.name,
-          },
         },
       ],
       RedeemInfoToDisplay: [
         {
           title: "Pending Rewards",
           id: "pending-rewards",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "Claimable Rewards",
           id: "claimable-rewards",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "Time Until Fully Vested",
           id: "bond-time-remaining",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "ROI",
           id: "bond-roi",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "Debt Ratio",
           id: "bond-debt-ratio",
-          options: {
-            bondName: bond.name,
-          },
         },
         {
           title: "Vesting Term",
           id: "bond-vesting-term",
-          options: {
-            bondName: bond.name,
-          },
         },
       ],
+      tokenInputValue: undefined,
     };
   },
   computed: {
@@ -207,12 +177,12 @@ export default {
         this.tokenName
       );
     },
-    buyBond(e){
+    buyBond(e) {
       console.log("Bond : " + e);
     },
-    redeemBond(e){
+    redeemBond(e) {
       console.log("Redeem : " + e);
-    }
+    },
   },
   beforeCreated() {
     this.bond = this.getBondById(this.bondId);

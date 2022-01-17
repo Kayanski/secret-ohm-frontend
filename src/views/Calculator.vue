@@ -13,7 +13,7 @@
             <template v-slot:valueSlot>
               <info-field
                 infoId="token-price"
-                :options="{ address: tokenContractAddress }"
+                :options="{ tokenName: tokenName }"
               />
             </template>
           </stats-card>
@@ -41,7 +41,7 @@
               <info-field
                 infoId="token-balance"
                 :options="{
-                  name: tokenName,
+                  contractName: tokenName,
                 }"
               />
             </template>
@@ -157,7 +157,7 @@
                   </div>
                 </div>
               </div>
-              <div class="form-group col-xs-12 col-md-6">
+              <div class="form-group col-12 px-md-5">
                 <label for="stakingDuration" class="form-label days-label">{{
                   nDaysText
                 }}</label>
@@ -201,6 +201,7 @@
   </div>
 </template>
 <script>
+import * as KeplrClient from "@/client";
 export default {
   data() {
     return {
@@ -243,20 +244,22 @@ export default {
     },
   },
   methods: {
-    calcMaxTokenAmount() {
-      this.tokenAmount = this.getUserBalance(this.sTokenContractAddress);
+    async calcMaxTokenAmount() {
+      this.tokenAmount = await KeplrClient.getBalance(this.sTokenName);
     },
-    calcCurrentAPY() {
-      this.apy = this.getAPY().toFixed(1);
+    async calcCurrentAPY() {
+      let apy = await KeplrClient.getAPY();
+      apy = 125;
+      this.apy = (apy * 100).toFixed(1);
     },
-    calcCurrentPricePurchase() {
-      this.purchasePrice = this.getTokenPriceInUSDValue(
-        this.tokenContractAddress
+    async calcCurrentPricePurchase() {
+      this.purchasePrice = await KeplrClient.getTokenPriceInUSD(
+        this.tokenName
       );
     },
-    calcCurrentPriceFuture() {
-      this.futurePrice = this.getTokenPriceInUSDValue(
-        this.tokenContractAddress
+    async calcCurrentPriceFuture() {
+      this.futurePrice = await KeplrClient.getTokenPriceInUSD(
+        this.tokenName
       );
     },
   },
@@ -298,5 +301,9 @@ export default {
 }
 .calc-days-range {
   padding: 0px !important;
+}
+.form-control {
+  color: #58b184 !important;
+  font-weight: bold !important;
 }
 </style>

@@ -1,98 +1,105 @@
 <template>
-  <form @submit="$emit('submitTokenInput', tokenEntered)" class="container token-input">
-      <div class="row balance">
-        <div class="col">
-          <span> Balance: </span>
-          <span
-            v-if="viewingKey == null"
-            class="view-balance-button"
-            @click="addViewingKey"
-          >
-            🔍 View Balance
-          </span>
-          <span v-else-if="tokenBalance != null">
-            {{ tokenBalance }} <strong>{{ token.name }} </strong>
-          </span>
+  <form
+    @submit="$emit('submitTokenInput', tokenEntered)"
+    class="container token-input"
+  >
+    <div class="row balance">
+      <div class="col">
+        <span> Balance: </span>
+        <span
+          v-if="viewingKey == null"
+          class="view-balance-button"
+          @click="addViewingKey"
+        >
+          🔍 View Balance
+        </span>
+        <span v-else-if="tokenBalance != null">
+          {{ tokenBalance }} <strong>{{ token.name }} </strong>
+        </span>
 
-          <span v-else class="balance-not-arrived"> </span>
-        </div>
+        <span v-else class="balance-not-arrived"> </span>
       </div>
-      <div class="form-container">
-        <div class="input-group-token col-xl-6 col-lg-7 col-md-8 col-xs-12">
-          <div class="input-group">
-            <input
-              type="number"
-              step="0.000001"
-              class="form-control"
-              :placeholder="tokenText"
-              aria-label="Recipient's username"
-              aria-describedby="basic-addon2"
-              v-model="tokenEntered"
-            />
-            <div class="input-group-append">
-              <span
-                class="input-group-text"
-                id="max-button"
-                @click="inputIsNow('100')"
-                >Max</span
-              >
-            </div>
-          </div>
-          <div class="row percentages-container">
-            <button
-              :class="[
-                'input-percentages',
-                'btn-outline-primary',
-                'col',
-                { active: isActive['25'] },
-              ]"
-              @click="inputIsNow('25')"
-            ></button>
-            <button
-              :class="[
-                'input-percentages',
-                'btn-outline-primary',
-                'col',
-                { active: isActive['50'] },
-              ]"
-              @mouseover="over(['25'])"
-              @mouseleave="leave(['25'])"
-              @click="inputIsNow('50')"
-            ></button>
-            <button
-              :class="[
-                'input-percentages',
-                'btn-outline-primary',
-                'col',
-                { active: isActive['75'] },
-              ]"
-              @mouseover="over(['25', '50'])"
-              @mouseleave="leave(['25', '50'])"
-              @click="inputIsNow('75')"
-            ></button>
-            <button
-              :class="[
-                'input-percentages',
-                'btn-outline-primary',
-                'col',
-                { active: isActive['100'] },
-              ]"
-              @mouseover="over(['25', '50', '75'])"
-              @mouseleave="leave(['25', '50', '75'])"
+    </div>
+    <div class="form-container">
+      <div class="input-group-token col-xl-6 col-lg-7 col-md-8 col-xs-12">
+        <div class="input-group">
+          <input
+            type="number"
+            step="0.000000001"
+            class="form-control"
+            :placeholder="tokenText"
+            aria-label="Recipient's username"
+            aria-describedby="basic-addon2"
+            v-model="tokenEntered"
+          />
+          <div class="input-group-append">
+            <span
+              class="input-group-text"
+              id="max-button"
               @click="inputIsNow('100')"
-            ></button>
-            <div class="percentage-text text-primary">
-              {{ percentageText }}
-            </div>
+              >Max</span
+            >
           </div>
         </div>
-
-        <div class="col-xs-12 col-sm-12 col-md-auto">
-          <button class="btn btn-outline-primary btn-submit" type="submit">
-            {{ buttonText }}
-          </button>
+        <div class="row percentages-container">
+          <button
+            :class="[
+              'input-percentages',
+              'btn-outline-primary',
+              'col',
+              { active: isActive['25'] },
+            ]"
+            @click="inputIsNow('25')"
+            type="button"
+          ></button>
+          <button
+            :class="[
+              'input-percentages',
+              'btn-outline-primary',
+              'col',
+              { active: isActive['50'] },
+            ]"
+            @mouseover="over(['25'])"
+            @mouseleave="leave(['25'])"
+            @click="inputIsNow('50')"
+            type="button"
+          ></button>
+          <button
+            :class="[
+              'input-percentages',
+              'btn-outline-primary',
+              'col',
+              { active: isActive['75'] },
+            ]"
+            @mouseover="over(['25', '50'])"
+            @mouseleave="leave(['25', '50'])"
+            @click="inputIsNow('75')"
+            type="button"
+          ></button>
+          <button
+            :class="[
+              'input-percentages',
+              'btn-outline-primary',
+              'col',
+              { active: isActive['100'] },
+            ]"
+            @mouseover="over(['25', '50', '75'])"
+            @mouseleave="leave(['25', '50', '75'])"
+            @click="inputIsNow('100')"
+            type="button"
+          ></button>
+          <div class="percentage-text text-primary">
+            {{ percentageText }}
+          </div>
         </div>
       </div>
+
+      <div class="col-xs-12 col-sm-12 col-md-auto">
+        <button class="btn btn-outline-primary btn-submit" type="submit">
+          {{ buttonText }}
+        </button>
+      </div>
+    </div>
   </form>
 </template>
 
@@ -148,6 +155,14 @@ export default {
         minimumFractionDigits: 0,
       });
     },
+    inputVal: {
+      get() {
+        return this.value;
+      },
+      set(val) {
+        this.$emit("input", val);
+      },
+    },
   },
   watch: {
     tokenEntered(newVal) {
@@ -164,11 +179,11 @@ export default {
           this.isActive[((i + 1) * 25).toString()] = true;
         }
       }
+      this.$emit("tokenInput", this.tokenEntered);
     },
   },
   methods: {
     addViewingKey() {
-      console.log(this.token.address);
       this.suggestToken(this.token.address, this.token.name);
     },
     async tokenBalanceFetch() {

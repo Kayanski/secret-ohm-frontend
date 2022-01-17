@@ -18,7 +18,7 @@
             <template v-slot:title>
               <div class="media align-items-center pointed">
                 <span class="avatar avatar-sm rounded-circle">
-                  <img alt="Image placeholder" src="img/theme/token-img.jpg" />
+                  <img alt="Image placeholder" src="img/theme/token-img.svg" />
                 </span>
                 <div class="media-body ml-2 d-block">
                   <span class="mb-0 text-sm font-weight-bold"></span>
@@ -54,7 +54,9 @@
                 />
               </span>
               <div class="media-body ml-2 d-block">
-                <span v-if="!keplrConnected" class="mb-0 text-sm font-weight-bold"
+                <span
+                  v-if="!keplrConnected"
+                  class="mb-0 text-sm font-weight-bold"
                   >Connect Keplr</span
                 >
                 <span v-else class="mb-0 text-sm font-weight-bold"
@@ -127,7 +129,7 @@
 </template>
 <script>
 import NavbarToggleButton from "@/components/NavbarToggleButton";
-import TokenStore from "@/token-store";
+import KeplrClient from "@/client";
 
 export default {
   name: "sidebar",
@@ -149,7 +151,7 @@ export default {
   },
   computed: {
     keplrConnected() {
-      return TokenStore.keplrConnected;
+      return KeplrClient.keplrConnected;
     },
   },
   provide() {
