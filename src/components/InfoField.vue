@@ -1,52 +1,24 @@
 <template>
-  <div class="row balance">
-    <div class="col">
-      <span
-        v-if="type == 'private' && viewingKey == null"
-        class="view-balance-button"
-        @click="addViewingKey"
-      >
-        🔍 {{ placeHolder }}
-      </span>
-      <span v-else-if="infoText != null">
-        {{ infoText }}
-      </span>
+  <span
+    v-if="type == 'private' && viewingKey == null"
+    class="view-balance-button"
+    @click="addViewingKey"
+  >
+    🔍 {{ placeHolder }}
+  </span>
+  <span
+    :class="[options.specialTextClass, 'info-text']"
+    v-else-if="infoText != null"
+  >
+    {{ infoText }}
+  </span>
 
-      <span v-else class="info-not-arrived"> </span>
-    </div>
-  </div>
+  <span v-else class="info-not-arrived"> </span>
 </template>
 
 <script>
 import * as KeplrClient from "@/client";
-
-function formatNumber(number, decimals) {
-  return number.toLocaleString(undefined, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
-
-function formatDollars(number, decimals, currency = "USD") {
-  return number.toLocaleString(undefined, {
-    currency: currency,
-    style: "currency",
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
-
-function formatToken(number, decimals, tokenName) {
-  return `${formatNumber(number, decimals)} ${tokenName}`;
-}
-
-function formatPercent(number, decimals = 2) {
-  return number.toLocaleString(undefined, {
-    style: "percent",
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
+import * as Format from "@/formatHelper";
 
 export default {
   name: "info-field",
@@ -56,7 +28,8 @@ export default {
       viewingKey: null,
       contract: undefined,
       type: "public",
-      placeHolder:"undefined",
+      placeHolder: undefined,
+      optionsWatch: false,
     };
   },
   props: {
@@ -68,42 +41,58 @@ export default {
     options: {
       type: Object,
       description: "Optional arguments to the query",
-      default: undefined,
+      default: () => {
+        return {};
+      },
     },
   },
-  mounted() {
-    this.updateText();
-    if(this.type == "private"){
-      // For private info, we test if there is a viewing key stored
-      this.contract = KeplrClient.getContractFromName(
-        this.options.contractName
-      );
-      window.keplr
-        .getSecret20ViewingKey(this.chainId, this.contract.contractAddress)
-        .then(() => (this.viewingKey = true))
-        .catch(() => (console.log("Error fetching viewingKey")));
+  async mounted() {
+    this.$nextTick(async function () {
+      // Code that will run only after the
+      // entire view has been rendered
+      this.updateText();
+      if (this.type == "private") {
+        // For private info, we test if there is a viewing key stored
+        this.contract = KeplrClient.getContractFromName(
+          this.options.contractName
+        );
+        let keplr = await KeplrClient.getKeplr();
+        keplr
+          .getSecret20ViewingKey(this.chainId, this.contract.contractAddress)
+          .then(() => (this.viewingKey = true))
+          .catch(() => console.log("Error fetching viewingKey"));
       }
+    });
   },
-  watch:{
-    viewingKey: function(){
+  watch: {
+    viewingKey: function () {
       this.updateText();
     },
-    options: function(){
-      this.updateText();
-      console.log("options changed")
-    }
+    options: function () {
+      if (this.optionsWatch) {
+        this.updateText();
+        console.log("options changed");
+      }
+    },
   },
   methods: {
     addViewingKey() {
       let contract = KeplrClient.getContractFromName(this.options.contractName);
       this.suggestToken(contract.contractAddress)
-      .then(() => {
-        this.expressSuccess(this.options.contractName + " successfully addded")
-        this.viewingKey = true;
-      })
-      .catch((error) => this.catchError("creating a ViewingKey for " + this.options.contractName, error));;
+        .then(() => {
+          this.expressSuccess(
+            this.options.contractName + " successfully addded"
+          );
+          this.viewingKey = true;
+        })
+        .catch((error) =>
+          this.catchError(
+            "creating a ViewingKey for " + this.options.contractName,
+            error
+          )
+        );
     },
-    updateText(){
+    updateText() {
       let infoTextPromise = undefined;
       switch (this.infoId) {
         //General Info
@@ -128,25 +117,40 @@ export default {
           infoTextPromise = KeplrClient.getCurrentIndex();
           break;
 
-        //Bond Info 
+        //Bond Info
         case "bond-you-will-get":
           infoTextPromise = KeplrClient.bondYouWillGet(
             this.options.bondName,
             this.options.amount
           );
+          this.optionsWatch = true;
           break;
-        /*
-          // User specific, Will have to do a special container for that (with secret keys)
-          case "pending-rewards":
-            infoTextPromise = KeplrClient.getPendingRewards(this.options.bondName);
-            break;
-          case "claimable-rewards":
-            infoTextPromise = this.bondClaimableRewards(this.options.bondName);
-            break;
-          case "bond-time-remaining":
-            infoTextPromise = this.bondTimeRemaining(this.options.bondName);
-            break; 
-        */
+        // User specific, Will have to do a special container for that (with secret keys)
+
+        case "pending-rewards":
+          infoTextPromise = KeplrClient.getPendingPayout(this.options.bondName);
+          this.type = "private";
+          this.placeHolder = "View Rewards";
+          break;
+        case "claimable-rewards":
+          infoTextPromise = KeplrClient.getClaimablePayout(
+            this.options.bondName
+          );
+          this.type = "private";
+          this.placeHolder = "View Payout";
+          break;
+
+        case "bond-time-remaining":
+          infoTextPromise = KeplrClient.getBondTimeRemaining(
+            this.options.bondName
+          );
+          this.type = "private";
+          this.placeHolder = "View Time Remaining";
+          break;
+
+        case "bond-purchased":
+          infoTextPromise = KeplrClient.getBondPurchased(this.options.bondName);
+          break;
         case "max-you-can-buy-bond":
           infoTextPromise = KeplrClient.bondMaxYouCanBuy(this.options.bondName);
           break;
@@ -158,7 +162,9 @@ export default {
           break;
 
         case "bond-vesting-term":
-          infoTextPromise = KeplrClient.getBondVestingTerm(this.options.bondName);
+          infoTextPromise = KeplrClient.getBondVestingTerm(
+            this.options.bondName
+          );
           break;
         case "bond-price":
           infoTextPromise = KeplrClient.getBondPrice(this.options.bondName);
@@ -179,18 +185,18 @@ export default {
         //User Info
         case "token-balance":
           infoTextPromise = KeplrClient.getBalance(this.options.contractName);
-          this.type="private"
-          this.placeHolder = "View Balance"
+          this.type = "private";
+          this.placeHolder = "View Balance";
           break;
-          //User sepcific queries, needs viewing keys
+        //User sepcific queries, needs viewing keys
         case "next-reward-amount":
           infoTextPromise = KeplrClient.getNextRewardAmount();
-          this.type="private"
-          this.placeHolder = "View Staking Info"
+          this.type = "private";
+          this.placeHolder = "View Staking Info";
           break;
 
         case "next-reward-yield":
-          infoTextPromise = KeplrClient.getRebaseAmount()
+          infoTextPromise = KeplrClient.getRebaseAmount();
           break;
 
         case "staking-roi":
@@ -200,26 +206,39 @@ export default {
         //Calculator Info
         case "initial-investment":
           infoTextPromise = this.getInitialInvestment(this.options);
+          this.optionsWatch = true;
           break;
         case "rewards-estimation":
           infoTextPromise = this.getRewardsEstimation(this.options);
+          this.optionsWatch = true;
           break;
 
         case "potential-return":
           infoTextPromise = this.getPotentialReturn(this.options);
+          this.optionsWatch = true;
           break;
         case "current-wealth":
           infoTextPromise = KeplrClient.getCurrentWealth(this.options);
+          this.optionsWatch = true;
           break;
         default:
           console.log(this.infoId + " not registered as info");
           break;
       }
       if (infoTextPromise) {
-        console.log(this.infoId,infoTextPromise);
+        console.log(this.infoId, infoTextPromise);
         infoTextPromise
-        .then((result) => (this.infoText = this.format(result)))
-        .catch((error) => console.log("Smooth Error Handling", error));
+          .then((result) => {
+            this.infoText = this.format(result);
+            this.infoValue = result;
+            this.$emit("valueAvailable", {
+              type: this.infoId,
+              options: this.options,
+              text: infoTextPromise,
+              value: this.infoValue,
+            });
+          })
+          .catch((error) => console.log("Smooth Error Handling", error));
       } else {
         this.infoText = null;
       }
@@ -227,68 +246,72 @@ export default {
     format(result) {
       switch (this.infoId) {
         case "token-price":
-          return formatDollars(result, 2);
+          return Format.formatDollars(result, 2);
         case "treasury-balance":
-          return formatDollars(result, 0);
+          return Format.formatDollars(result, 0);
         case "market-cap":
-          return formatDollars(result, 0);
+          return Format.formatDollars(result, 0);
         case "circulating-supply-total":
-          return formatToken(result, 2, this.tokenName);
+          return Format.formatToken(result, 2, this.tokenName);
         case "backing-per-token":
-          return formatDollars(result, 2);
+          return Format.formatDollars(result, 2);
         case "current-index":
-          return formatNumber(result, 2);
+          return Format.formatNumber(result, 2);
 
         //User Info
         case "token-balance":
-          return formatToken(result, 4, this.options.contractName);
+          return Format.formatToken(result, 4, this.options.contractName);
 
         //Bond Indo (to implement)
         case "bond-you-will-get":
-          return formatToken(result, 4);
+          return Format.formatToken(result, 4, this.tokenName);
         case "pending-rewards":
-          break;
+          //return result;
+          return Format.formatToken(result, 4, this.tokenName);
+        case "bond-purchased":
+          return Format.formatDollars(result, 2);
         case "max-you-can-buy-bond":
-          break;
+          return Format.formatToken(result, 4, this.tokenName);
         case "bond-roi":
-          break;
+          return Format.formatPercent(result);
         case "bond-debt-ratio":
-          break;
+          return Format.formatPercent(result, 4);
         case "bond-vesting-term":
-          break;
+          return Format.formatDays(result, true);
         case "claimable-rewards":
-          break;
+          return Format.formatToken(result, 4, this.tokenName);
         case "bond-time-remaining":
-          break;
+          console.log(result);
+          return Format.formatDays(result, true);
         //stop to-implement
 
         case "bond-price":
-          return formatDollars(result, 2);
+          return Format.formatDollars(result, 2);
         //Stake Info
 
         case "apy":
-          return formatPercent(result);
+          return Format.formatPercent(result);
         case "total-value-deposited":
-          return formatDollars(result, 0);
+          return Format.formatDollars(result, 0);
 
         case "time-till-next-rebase":
-          break;
+          return Format.formatDays(result);
         case "next-reward-amount":
-          return formatToken(result,4, `s${this.tokenName}`);
+          return Format.formatToken(result, 4, `s${this.tokenName}`);
         case "next-reward-yield":
-          return formatPercent(result,4);
+          return Format.formatPercent(result, 4);
         case "staking-roi":
-          return formatPercent(result,4);
+          return Format.formatPercent(result, 4);
 
         //Calculator Info
         case "initial-investment":
-          return formatDollars(result);
+          return Format.formatDollars(result);
         case "rewards-estimation":
-          return formatToken(result, 4, this.tokenName);
+          return Format.formatToken(result, 4, this.tokenName);
         case "potential-return":
-          return formatDollars(result);
+          return Format.formatDollars(result);
         case "current-wealth":
-          return formatDollars(result);
+          return Format.formatDollars(result);
       }
     },
   },

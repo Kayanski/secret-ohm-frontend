@@ -19,8 +19,8 @@ import Tabs from "../components/Tabs/Tabs";
 import InfoField from "../components/InfoField";
 import BalanceInfoField from "../components/BalanceInfoField";
 import TokenInput from "../components/TokenInput";
-
 import { ElTooltip, ElPopover } from "element-plus";
+import easySpinner from "vue-easy-spinner";
 
 const GlobalComponents = {
   install(app) {
@@ -49,6 +49,10 @@ const GlobalComponents = {
     app.component("balance-info-field", BalanceInfoField);
     app.use(ElTooltip);
     app.use(ElPopover);
+    app.use(easySpinner, {
+      /*options*/
+      prefix: "easy",
+    });
   },
 };
 

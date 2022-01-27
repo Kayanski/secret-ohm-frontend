@@ -17,7 +17,7 @@
         </div>
         <div class="col-lg-6">
           <stats-card
-            :title="tokenPriceText()"
+            :title="tokenName + ' Price'"
             type="gradient-orange"
             sub-title="true"
             class="mb-4"
@@ -88,31 +88,26 @@
                   </strong>
                 </div>
                 <div class="col-3 bond-table-item d-flex">
-                  <div class="col-6 bond-table-item bond-price">
-                    <strong>
-                      ${{
-                        bond.price.toLocaleString(undefined, {
-                          maximumFractionDigits: 1,
-                        })
-                      }}
-                    </strong>
+                  <div class="col-6 bond-table-item">
+                    <info-field
+                      infoId="bond-price"
+                      :options="{ bondName: bond.name }"
+                    />
                   </div>
-                  <div class="col-6 bond-table-item bond-roi">
-                    {{ ROIPercent(bond.ROI) }}
+                  <div class="col-6 bond-table-item">
+                    <info-field
+                      infoId="bond-roi"
+                      :options="{ bondName: bond.name }"
+                    />
                   </div>
                 </div>
                 <div class="col-3 bond-table-item bond-purchased">
-                  ${{
-                    bond.totalPurchased.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })
-                  }}
+                  <info-field
+                    infoId="bond-purchased"
+                    :options="{ bondName: bond.name }"
+                  />
                 </div>
-                <el-tooltip
-                  placement="top"
-                  :content="tooltipText(bond)"
-                  class="col-2"
-                >
+                <el-tooltip placement="top" content="Save Now" class="col-2">
                   <router-link :to="bondLink(bond)">
                     <button class="btn btn-secondary">Bond</button>
                   </router-link>
@@ -157,35 +152,33 @@
                 <div class="row bond-square-property">
                   <div class="bond-table-item">Price</div>
                   <div class="bond-table-item">
-                    ${{
-                      bond.price.toLocaleString(undefined, {
-                        maximumFractionDigits: 1,
-                      })
-                    }}
+                    <info-field
+                      infoId="bond-price"
+                      :options="{ bondName: bond.name }"
+                    />
                   </div>
                 </div>
                 <div class="row bond-square-property">
                   <div class="bond-table-item">ROI</div>
                   <div class="bond-table-item">
-                    {{ ROIPercent(bond.ROI) }}
+                    <info-field
+                      infoId="bond-roi"
+                      :options="{ bondName: bond.name }"
+                      @valueAvailable="update"
+                    />
                   </div>
                 </div>
 
                 <div class="row bond-square-property">
                   <div class="bond-table-item">Purchased</div>
                   <div class="bond-table-item">
-                    ${{
-                      bond.totalPurchased.toLocaleString(undefined, {
-                        maximumFractionDigits: 0,
-                      })
-                    }}
+                    <info-field
+                      infoId="bond-purchased"
+                      :options="{ bondName: bond.name }"
+                    />
                   </div>
                 </div>
-                <el-tooltip
-                  placement="top"
-                  :content="tooltipText(bond)"
-                  class="col-12"
-                >
+                <el-tooltip placement="top" content="Save Now" class="col-12">
                   <router-link :to="bondLink(bond)">
                     <button class="btn btn-secondary bond-button">
                       Bond {{ bond.name }}
@@ -211,7 +204,13 @@ export default {
   data() {
     return {
       showModal: false,
+      toolTipText: {},
     };
+  },
+  created() {
+    this.bonds.forEach(function (bond) {
+      bond.toolTipText = "Save";
+    }, this);
   },
   methods: {
     onCopy(el) {
@@ -219,17 +218,16 @@ export default {
       test.select();
       document.execCommand("copy");
     },
-    ROIPercent(ROI) {
-      return ROI.toLocaleString(undefined, {
-        style: "percent",
-        minimumFractionDigits: 2,
-      });
-    },
-    tooltipText(bond) {
-      return "Save " + this.ROIPercent(bond.ROI);
-    },
     bondLink(bond) {
       return "/bonds/" + bond.id;
+    },
+    async update(event) {
+      if (event.type == "bond-roi") {
+        this.getBondByName(event["options"]["bondName"]).roi = await event[
+          "value"
+        ];
+      }
+      console.log(this.bonds);
     },
   },
   watch: {
@@ -272,13 +270,13 @@ export default {
   position: relative;
   left: -2px;
 }
-.bond-table-item {
-  padding: 0px !important;
-}
 .bond-square-container {
 }
 .bond-square {
   margin-bottom: 15px;
+}
+.bond-table-item {
+  padding: 0px !important;
 }
 .bond-icon-name {
   align-items: center;

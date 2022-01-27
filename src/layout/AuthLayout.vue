@@ -14,11 +14,7 @@
         <!-- Collapse header -->
         <div class="navbar-collapse-header d-md-none">
           <div class="row">
-            <div class="col-6 collapse-brand">
-              <router-link to="/">
-                <img src="img/brand/green.png" />
-              </router-link>
-            </div>
+            <div class="col-6 collapse-brand"></div>
             <div class="col-6 collapse-close">
               <button
                 type="button"
@@ -100,13 +96,13 @@
       <div class="container">
         <div class="row align-items-center justify-content-xl-between">
           <div class="col-xl-6">
-            <div class="copyright text-center text-xl-left text-muted">
-              &copy; {{ year }}
+            <div class="copyright text-center text-lg-left text-muted">
+              © {{ year }}
               <a
-                href="https://www.creative-tim.com"
+                href="https://ovaldao.space"
                 class="font-weight-bold ml-1"
                 target="_blank"
-                >Creative Tim</a
+                >Oval DAO</a
               >
             </div>
           </div>
@@ -116,15 +112,7 @@
             >
               <li class="nav-item">
                 <a
-                  href="https://www.creative-tim.com"
-                  class="nav-link"
-                  target="_blank"
-                  >Creative Tim</a
-                >
-              </li>
-              <li class="nav-item">
-                <a
-                  href="https://www.creative-tim.com/presentation"
+                  href="https://ovaldao.space/"
                   class="nav-link"
                   target="_blank"
                   >About Us</a
@@ -132,18 +120,18 @@
               </li>
               <li class="nav-item">
                 <a
-                  href="https://www.creative-tim.com/blog"
+                  href="https://ovaldao.space/"
                   class="nav-link"
                   target="_blank"
-                  >Blog</a
+                  >Code</a
                 >
               </li>
               <li class="nav-item">
                 <a
-                  href="https://github.com/creativetimofficial/argon-dashboard/blob/master/LICENSE.md"
+                  href="https://www.creative-tim.com/license"
                   class="nav-link"
                   target="_blank"
-                  >MIT License</a
+                  >UI License</a
                 >
               </li>
             </ul>

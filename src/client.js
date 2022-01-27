@@ -1,5 +1,7 @@
 import { SuggestLocalChain } from "./suggest-local";
 import { SigningCosmWasmClient, CosmWasmClient } from "secretjs";
+import mitt from "mitt";
+const emitter = mitt();
 let contracts = require("@/contract_data.json");
 
 let signingClient = undefined;
@@ -21,19 +23,41 @@ let localQueryStore = {
   bondTerms: {},
   debtRatio: {},
   balance: {},
+  bondPurchased: {},
+  pendingPayout: {},
+  percentVestedFor: {},
+  bondInfo: {},
+};
+
+let customGas = {
+  stake: {
+    amount: [{ amount: "250000", denom: "uscrt" }],
+    gas: "250000",
+  },
+  unstake: {
+    amount: [{ amount: "100000", denom: "uscrt" }],
+    gas: "100000",
+  },
 };
 
 //Utils
-
 export function getAPYfromRebaseROI(roi, rebases = 3 * 365) {
-  return (1 + roi) ** rebases;
+  return (1 + roi) ** rebases - 1;
 }
 
 export function getContractFromName(contractName) {
   if (contractName in contracts) {
     return contracts[contractName][1];
   } else {
-    console.log(contractName, contracts);
+    console.log("Contract not found : ", contractName, contracts);
+  }
+}
+
+export function getCodeHashFromName(contractName) {
+  if (contractName in contracts) {
+    return contracts[contractName][0];
+  } else {
+    console.log("Contract not found : ", contractName, contracts);
   }
 }
 
@@ -114,10 +138,10 @@ export async function getAPY(rebases = 3 * 365) {
   return getAPYfromRebaseROI(rebaseAmount, rebases);
 }
 
-export async function getNextRewardAmount(){
+export async function getNextRewardAmount() {
   let tokenBalance = await getBalance("sOHM");
   let rebaseAPI = await getRebaseAmount();
-  return tokenBalance*rebaseAPI;
+  return tokenBalance * rebaseAPI;
 }
 
 // General
@@ -219,8 +243,8 @@ export async function getTokenPrice(contractName, baseContractName) {
     contract, baseContract;
     //let response = await client.queryContractSmart(contracts["secret-swap"], { "price": {contractAddress, baseContractAddress}});
     //return response.price;
-    let price = 583;
-    localQueryStore.tokenPrice[market_name] = parseInt(price);
+    let price = 583.5;
+    localQueryStore.tokenPrice[market_name] = parseFloat(price);
   }
   return localQueryStore.tokenPrice[market_name];
 }
@@ -244,18 +268,12 @@ export async function getBondPrice(bondName) {
     let response = client.queryContractSmart(bondAddress, query);
     localQueryStore.bondPrice[bondName] = response;
   }
-  let principleInfo = await getTokenInfo(bondContract.principle);
-  return (
-    (await localQueryStore.bondPrice[bondName]).bond_price.price /
-    Math.pow(10, principleInfo.decimals)
-  );
+  return (await localQueryStore.bondPrice[bondName]).bond_price.price / 100;
 }
 
 export async function getBondPriceInUSD(bondName) {
   let bondPrice = await getBondPrice(bondName);
-  let bondContract = contracts[bondName][1];
-  let tokenPrice = await getTokenPriceInUSD(bondContract.principle);
-  return bondPrice * tokenPrice;
+  return bondPrice;
 }
 
 export async function bondYouWillGet(bondName, sendAmount) {
@@ -263,7 +281,7 @@ export async function bondYouWillGet(bondName, sendAmount) {
   if (sendAmount == undefined) {
     sendAmount = 0;
   }
-  return bondPrice * sendAmount;
+  return sendAmount / bondPrice;
 }
 
 export async function getBondTerms(bondName) {
@@ -276,6 +294,22 @@ export async function getBondTerms(bondName) {
     localQueryStore.bondTerms[bondName] = response;
   }
   return await localQueryStore.bondTerms[bondName];
+}
+
+export async function getBondPurchased(bondName) {
+  if (typeof localQueryStore.bondPurchased[bondName] === "undefined") {
+    let treasury = getContractFromName("treasury").contractAddress;
+    let bondAddress = getContractFromName(bondName).contractAddress;
+    const query = {
+      total_bond_deposited: {
+        token: bondAddress,
+      },
+    };
+    let response = client.queryContractSmart(treasury, query);
+    localQueryStore.bondPurchased[bondName] = response;
+  }
+  return (await localQueryStore.bondPurchased[bondName]).total_bond_deposited
+    .amount;
 }
 
 export async function bondMaxYouCanBuy(bondName) {
@@ -291,7 +325,7 @@ export async function getBondROI(bondName) {
 
 export async function getBondVestingTerm(bondName) {
   let bondTerms = await getBondTerms(bondName);
-  return bondTerms;
+  return bondTerms.vesting_term * SECONDS_BETWEEN_BLOCKS;
 }
 
 export async function getBondDebtRatio(bondName) {
@@ -306,8 +340,69 @@ export async function getBondDebtRatio(bondName) {
     let response = client.queryContractSmart(bondAddress, query);
     localQueryStore.debtRatio[bondName] = response;
   }
-  return parseInt(
-    (await localQueryStore.debtRatio[bondName]).standardized_debt_ratio.ratio
+  return (await localQueryStore.debtRatio[bondName]).standardized_debt_ratio
+    .ratio;
+}
+// User bond balances
+
+export async function getPercentVestedFor(bondName) {
+  if (typeof localQueryStore.percentVestedFor[bondName] === "undefined") {
+    let bondAddress = getContractFromName(bondName).contractAddress;
+    let block_height = await getCurrentBlockHeight(client);
+    let keplr = await getKeplr();
+    let apiKey = await keplr.getSecret20ViewingKey(chainId, bondAddress);
+    const query = {
+      percent_vested_for: {
+        address: await getUserAddress(),
+        block_height: block_height,
+        key: apiKey,
+      },
+    };
+    let response = client.queryContractSmart(bondAddress, query);
+    localQueryStore.percentVestedFor[bondName] = response.catch(
+      (localQueryStore.percentVestedFor[bondName] = undefined)
+    );
+  }
+  return (await localQueryStore.percentVestedFor[bondName]).percent_vested_for
+    .percent;
+}
+
+export async function getBondInfo(bondName) {
+  if (typeof localQueryStore.bondInfo[bondName] === "undefined") {
+    let bondAddress = getContractFromName(bondName).contractAddress;
+    let keplr = await getKeplr();
+    let apiKey = await keplr.getSecret20ViewingKey(chainId, bondAddress);
+    const query = {
+      bond_info: {
+        address: await getUserAddress(),
+        key: apiKey,
+      },
+    };
+    let response = client.queryContractSmart(bondAddress, query);
+    localQueryStore.bondInfo[bondName] = response;
+  }
+  return (await localQueryStore.bondInfo[bondName]).bond;
+}
+
+export async function getPendingPayout(bondName) {
+  let bondInfo = await getBondInfo(bondName);
+  let decimals = await getDecimals("OHM");
+  let payout = bondInfo.payout / Math.pow(10, decimals);
+  return payout;
+}
+
+export async function getClaimablePayout(bondName) {
+  let payout = await getPendingPayout(bondName);
+  let percent_vested = await getPercentVestedFor(bondName);
+  let claimable_payout = (payout * percent_vested) / 10_000;
+  return claimable_payout;
+}
+
+export async function getBondTimeRemaining(bondName) {
+  let bondInfo = await getBondInfo(bondName);
+  let percent_vested = await getPercentVestedFor(bondName);
+  return (
+    bondInfo.vesting * (1 - percent_vested / 10_000) * SECONDS_BETWEEN_BLOCKS
   );
 }
 
@@ -326,22 +421,165 @@ export async function getCurrentEpoch() {
 export async function timeTillNextRebase() {
   let epoch = await getCurrentEpoch();
   let current_block = await getCurrentBlockHeight(client);
-  return (epoch.end_block - current_block) * SECONDS_BETWEEN_BLOCKS;
+  let timestamp = (epoch.end_block - current_block) * SECONDS_BETWEEN_BLOCKS;
+  return timestamp;
+}
+
+// Executes
+export async function stake(amount) {
+  let stakingHelper = getContractFromName("staking-helper");
+  let stakingHelperCodeHash = getCodeHashFromName("staking-helper");
+  let OHMContract = getContractFromName("OHM");
+  let decimals = await getDecimals("OHM");
+  let send_amount = parseFloat(amount) * Math.pow(10, decimals);
+  if (isNaN(send_amount)) {
+    throw "Staking amount is nan";
+  }
+  let handleMsg = {
+    send: {
+      recipient: stakingHelper.contractAddress,
+      recipient_code_hash: stakingHelperCodeHash,
+      amount: String(send_amount),
+      msg: Buffer.from(
+        JSON.stringify({ stake: { recipient: await getUserAddress() } })
+      ).toString("base64"),
+    },
+  };
+  let response = await signingClient.execute(
+    OHMContract.contractAddress,
+    handleMsg,
+    "",
+    [],
+    customGas.stake
+  );
+  console.log("Staked some OHM", response);
+  return response;
+}
+
+export async function unstake(amount) {
+  let staking = getContractFromName("staking");
+  let stakingCodeHash = getCodeHashFromName("staking");
+  let sOHMContract = getContractFromName("sOHM");
+  let decimals = await getDecimals("sOHM");
+  let send_amount = parseFloat(amount) * Math.pow(10, decimals);
+  if (isNaN(send_amount)) {
+    throw "Unstaking amount is nan";
+  }
+  // Stake
+  let handleMsg = {
+    send: {
+      recipient: staking.contractAddress,
+      recipient_code_hash: stakingCodeHash,
+      amount: String(send_amount),
+      msg: Buffer.from(
+        JSON.stringify({
+          unstake: {
+            trigger: false,
+          },
+        })
+      ).toString("base64"),
+    },
+  };
+  let response = await signingClient.execute(
+    sOHMContract.contractAddress,
+    handleMsg,
+    "",
+    [],
+    customGas.unstake
+  );
+  console.log("Unstaked some sOHM", response);
+  return response;
+}
+
+export async function bond(bondName, amount, bondPrice) {
+  if (!amount) {
+    throw "Bonding amount is NaN";
+  }
+  let bondContract = getContractFromName(bondName);
+  let bondCodeHash = getCodeHashFromName(bondName);
+  let principleContract = getContractFromName(bondContract.principle);
+  let decimals = await getDecimals(bondContract.principle);
+
+  let send_amount = parseFloat(amount) * Math.pow(10, decimals);
+  let handleMsg = {
+    send: {
+      recipient: bondContract.contractAddress,
+      recipient_code_hash: bondCodeHash,
+      amount: String(send_amount),
+      msg: Buffer.from(
+        JSON.stringify({
+          deposit: {
+            max_price: String(bondPrice),
+            depositor: await getUserAddress(),
+          },
+        })
+      ).toString("base64"),
+    },
+  };
+
+  let response = await signingClient.execute(
+    principleContract.contractAddress,
+    handleMsg
+  );
+  return response;
+}
+
+export async function redeem(bondName, stake) {
+  let bondContract = getContractFromName(bondName);
+
+  let handleMsg = {
+    redeem: {
+      recipient: await getUserAddress(),
+      stake: stake,
+    },
+  };
+
+  let response = await signingClient.execute(
+    bondContract.contractAddress,
+    handleMsg
+  );
+  return response;
 }
 
 // General functions
+export async function getKeplr() {
+  if (window.keplr) {
+    return window.keplr;
+  }
 
-export function keplrConnected() {
-  console.log("updated keplrConncted");
-  return signingClient != undefined;
+  if (document.readyState === "complete") {
+    return window.keplr;
+  }
+
+  return new Promise((resolve) => {
+    const documentStateChange = (event) => {
+      if (event.target && event.target.readyState === "complete") {
+        resolve(window.keplr);
+
+        document.removeEventListener("readystatechange", documentStateChange);
+      }
+    };
+
+    document.addEventListener("readystatechange", documentStateChange);
+  });
 }
 
-export function getUserAddress() {
+export async function getUserAddress() {
+  if (accounts == undefined) {
+    await initSigningClient();
+  }
   return accounts[0].address;
 }
 
-export function getUserAddressText() {
-  let address = getUserAddress();
+export function getUserAddressSync() {
+  if (accounts == undefined) {
+    return "";
+  }
+  return accounts[0].address;
+}
+
+export async function getUserAddressText() {
+  let address = await getUserAddress();
   return (
     address.substring(0, 9) + "..." + address.substring(address.length - 3)
   );
@@ -351,7 +589,8 @@ export async function getBalance(contractName) {
   // Query balance with the api key
   if (typeof localQueryStore.balance[contractName] === "undefined") {
     let contract = getContractFromName(contractName);
-    let apiKey = await window.keplr.getSecret20ViewingKey(
+    let keplr = await getKeplr();
+    let apiKey = await keplr.getSecret20ViewingKey(
       chainId,
       contract.contractAddress
     );
@@ -369,18 +608,21 @@ export async function getBalance(contractName) {
   }
   let token_info = await getTokenInfo(contractName);
   let raw_balance = await localQueryStore.balance[contractName];
-  return raw_balance.balance.amount / Math.pow(10, token_info.decimals);
+  return (
+    parseInt(raw_balance.balance.amount) /
+    Math.pow(10, parseInt(token_info.decimals))
+  );
 }
 
-export async function getBalanceInUSD(contractName){
+export async function getBalanceInUSD(contractName) {
   let balance = await getBalance(contractName);
   let price = await getTokenPriceInUSD(contractName);
-  return balance*price;
+  return balance * price;
 }
 
-export async function getCurrentWealth(options){
+export async function getCurrentWealth(options) {
   let price = await getTokenPriceInUSD("OHM");
-  return options.amount*price;
+  return options.amount * price;
 }
 
 export function getSigningClient() {
@@ -394,10 +636,13 @@ export function getClient() {
 export async function initSigningClient() {
   SuggestLocalChain();
 
-  //We need to enable Keplr to be sure the client is connecte (as per the docs)
-  window.keplr.enable(chainId);
+  let keplr = await getKeplr();
+  //We need to enable Keplr to be sure the client is connected (as per the docs)
+  keplr.enable(chainId);
 
-  const offlineSigner = window.keplr.getOfflineSigner(chainId);
+  const offlineSigner = keplr.getOfflineSigner(chainId);
+
+  const enigmaUtils = window.getEnigmaUtils(chainId);
 
   // XXX: This line is needed to set the sender address for SigningCosmosClient.
   accounts = await offlineSigner.getAccounts().catch(console.log);
@@ -405,8 +650,10 @@ export async function initSigningClient() {
   signingClient = new SigningCosmWasmClient(
     restUrl,
     accounts[0].address,
-    offlineSigner
+    offlineSigner,
+    enigmaUtils
   );
+  emitter.emit("KeplrConnected");
 }
 
 export async function initClient() {

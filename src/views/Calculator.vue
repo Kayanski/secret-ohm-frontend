@@ -5,7 +5,7 @@
       <div class="row">
         <div class="col-xs-12 col-md-6 col-xl-4 col-lg-4">
           <stats-card
-            :title="tokenPriceText()"
+            :title="tokenName + ' Price'"
             type="gradient-orange"
             sub-title="true"
             class="mb-4"
@@ -244,6 +244,9 @@ export default {
     },
   },
   methods: {
+    async tokenPriceText() {
+      return 532;
+    },
     async calcMaxTokenAmount() {
       this.tokenAmount = await KeplrClient.getBalance(this.sTokenName);
     },
@@ -253,14 +256,10 @@ export default {
       this.apy = (apy * 100).toFixed(1);
     },
     async calcCurrentPricePurchase() {
-      this.purchasePrice = await KeplrClient.getTokenPriceInUSD(
-        this.tokenName
-      );
+      this.purchasePrice = await KeplrClient.getTokenPriceInUSD(this.tokenName);
     },
     async calcCurrentPriceFuture() {
-      this.futurePrice = await KeplrClient.getTokenPriceInUSD(
-        this.tokenName
-      );
+      this.futurePrice = await KeplrClient.getTokenPriceInUSD(this.tokenName);
     },
   },
   created() {

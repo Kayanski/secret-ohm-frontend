@@ -3,42 +3,43 @@
     <base-header type="gradient-success" class="pb-6 pb-8 pt-5 pt-lg-8">
       <!-- Card stats -->
       <div class="row">
-        <div class="col-lg-4 col-md-6">
+        <div class="col-md-6 col-sm-12">
           <stats-card
             title="APY"
             type="gradient-red"
             sub-title="350,897"
-            class="mb-4 mb-xl-0"
+            class="mb-4"
           >
             <template v-slot:valueSlot>
               <info-field infoId="apy" />
             </template>
           </stats-card>
         </div>
-        <div class="col-lg-4 col-md-6">
-          <stats-card
-            title="Total Value Deposited"
-            type="gradient-orange"
-            sub-title="2,356"
-            class="mb-4 mb-xl-0"
-          >
-            <template v-slot:valueSlot>
-              <info-field infoId="total-value-deposited" />
-            </template>
-          </stats-card>
-        </div>
-        <div class="col-lg-4 col-md-12">
+        <div class="col-md-6 col-sm-12">
           <stats-card
             title="Current Index"
             type="gradient-green"
             sub-title="924"
-            class="mb-4 mb-xl-0"
+            class="mb-4"
           >
             <template v-slot:valueSlot>
               <info-field infoId="current-index" />
             </template>
           </stats-card>
         </div>
+        <div class="col-12">
+          <stats-card
+            title="Total Value Deposited"
+            type="gradient-orange"
+            sub-title="2,356"
+            class="mb-4"
+          >
+            <template v-slot:valueSlot>
+              <info-field infoId="total-value-deposited" />
+            </template>
+          </stats-card>
+        </div>
+        
       </div>
     </base-header>
 
@@ -48,7 +49,9 @@
           <div class="card shadow d-md-flex">
             <div class="card-header bg-transparent">
               <h3 class="mb-0">Stake {{ tokenName }} (3,3)</h3>
-              <info-field infoId="time-till-next-rebase" />
+              <div class="rebaseHours">
+                <info-field infoId="time-till-next-rebase" />
+              </div>
             </div>
 
             <div class="card-body">
@@ -61,12 +64,10 @@
                 <tab-pane title="Stake">
                   <div class="get-bond-container container">
                     <token-input
-                      :token="{
-                        name: tokenName,
-                        address: tokenContractAddress,
-                      }"
                       buttonText="Stake"
                       @submitTokenInput="stake"
+                      @submit.prevent
+                      ref="stakeInput"
                     />
                     <div class="row stake-info-container">
                       <div
@@ -90,12 +91,11 @@
                 <tab-pane title="Unstake">
                   <div class="get-bond-container container">
                     <token-input
-                      :token="{
-                        name: 's' + tokenName,
-                        address: sTokenContractAddress,
-                      }"
+                      :contractName="'s' + tokenName"
                       buttonText="Unstake"
                       @submitTokenInput="unstake"
+                      @submit.prevent
+                      ref="unstakeInput"
                     />
                     <div class="row stake-info-container">
                       <div
@@ -125,6 +125,7 @@
   </div>
 </template>
 <script>
+import * as KeplrClient from "@/client";
 export default {
   data() {
     return {
@@ -166,9 +167,43 @@ export default {
   },
   methods: {
     stake(e) {
+      KeplrClient.stake(e)
+        .then((result) => {
+          this.expressSuccess(
+            `Stake, status : ${
+              JSON.parse(new Buffer.from(result.data).toString()).send.status
+            }<br/>
+            ${this.linkToTxHash(
+              result.transactionHash
+            )}`
+          );
+          this.$refs.stakeInput.submitted();
+        })
+        .catch((error) => {
+          this.catchError("staking", error,
+            this.linkToAddress());
+          this.$refs.stakeInput.submitted();
+        });
       console.log("Stake : " + e);
     },
     unstake(e) {
+      KeplrClient.unstake(e)
+        .then((result) => {
+          this.expressSuccess(
+            `Unstake, status : ${
+              JSON.parse(new Buffer.from(result.data).toString()).send.status
+            }<br/>
+            ${this.linkToTxHash(
+              result.transactionHash
+            )}`
+          );
+          this.$refs.unstakeInput.submitted();
+        })
+        .catch((error) => {
+          this.catchError("unstaking", error,
+            this.linkToAddress());
+          this.$refs.unstakeInput.submitted();
+        });
       console.log("Unstake : " + e);
     },
   },
@@ -182,5 +217,14 @@ export default {
   width: 100%;
   font-weight: 560;
   font-size: 0.9em;
+}
+.rebaseHours {
+  font-size: 14px;
+}
+.stake-info-container {
+  max-width: 100%;
+}
+.stake-info-value {
+  max-width: 60%;
 }
 </style>

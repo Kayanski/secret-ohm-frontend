@@ -22,83 +22,89 @@ import ArgonDashboard from "./plugins/argon-dashboard";
 import "element-plus/lib/theme-chalk/index.css";
 import "@popperjs/core";
 import Notifications from "@kyvg/vue3-notification";
-import { notify } from "@kyvg/vue3-notification";
 import KeplrClient from "./client";
-import { getContractFromName } from "./client";
+import { getContractFromName, getUserAddressSync } from "./client";
 const appInstance = createApp(App);
 appInstance.use(router);
 appInstance.use(ArgonDashboard);
 appInstance.use(Notifications);
+
 const keplrOptions = {
-  restUrl: "http://testnet.securesecrets.org:1317/",
+  //restUrl: "http://testnet.securesecrets.org:1317/",
+  restUrl: "https://api.ovaldao.space/rest/",
   chainId: "pulsar-2",
 };
+
+/*
+const keplrOptions = {
+  restUrl: "http://localhost:1337",
+  chainId: "enigma-pub-testnet-3",
+};
+*/
 
 appInstance.use(KeplrClient, keplrOptions);
 /* Global variables */
 
-appInstance.config.globalProperties.catchError = function (actionTaken, error) {
+appInstance.config.globalProperties.catchError = function (
+  actionTaken,
+  error,
+  additional_info = "",
+  duration=-1
+) {
   let readableText = "Error when " + actionTaken;
   console.log(readableText + " : \n" + error);
-  notify({
+  this.$notify({
     title: readableText,
-    text: error,
+    text: `${error}<br/>
+            ${additional_info}`,
     type: "error",
-    duration: -1,
+    duration: duration,
     speed: 1000,
   });
   //errorMessage(actionTaken);
 };
 
 appInstance.config.globalProperties.expressSuccess = function (message) {
-  notify({
-    title: "Transaction réussie",
+  this.$notify({
+    title: "Transaction succeeded",
     text: message,
     type: "success",
-    duration: 2000,
+    duration: -1,
     speed: 500,
   });
 };
-
+let tokenName = "OHM";
 let tokenProperties = {
-  tokenName: "OHM",
+  tokenName: tokenName,
   sTokenName: "sOHM",
   chainId: "pulsar-2",
-  tokenContractAddress: "secret15l9cqgz5uezgydrglaak5ahfac69kmx2qpd6xt",
-  sTokenContractAddress: "secret1h0tn05w9cjtsz9stccq2xl5rha2fxl0n2d765t",
-  sUSTContractAddress: "secret129h4vu66y3gry6wzwa24rw0vtqjyn8tujuwtn9",
-  tokenPrice: 978.7987,
-  tokenPriceText() {
-    return this.tokenName + " price";
-  },
   bonds: [
     {
       icons: ["img/theme/token-img.jpg", "img/theme/token-img.jpg"],
       name: "sUST-bond",
+      principle: "sUST",
       id: "sust",
-      price: 596.135,
-      ROI: 0.052,
-      totalPurchased: 46879562.123457,
+      contractAddress: "secretnothing189765",
     },
     {
       icons: ["img/theme/token-img.jpg"],
       name: "sUST-bond",
+      principle: "sUST",
       id: "sustohmLP",
-      price: 596.135,
-      ROI: 0.052,
-      totalPurchased: 46879562.123457,
+      contractAddress: "secretnothing189765",
     },
   ],
   secretswapTokenLink() {
-    return `https://app.secretswap.io/swap?inputCurrency=${this.tokenContractAddress}&outputCurrency=${this.sUSTContractAddress}`;
+    let tokenAddress = getContractFromName(tokenName).contractAddress;
+    let sUSTAddress = getContractFromName("sUST").contractAddress;
+    return `https://app.secretswap.io/swap?inputCurrency=${tokenAddress}&outputCurrency=${sUSTAddress}`;
   },
 
   async suggestToken(contractAddress) {
-    return window.keplr
-      .suggestToken(this.chainId, contractAddress)
+    return window.keplr.suggestToken(this.chainId, contractAddress);
   },
   async suggestMainToken() {
-    let contractAddress = getContractFromName("OHM").contractAddress;
+    let contractAddress = getContractFromName(tokenName).contractAddress;
     await this.suggestToken(contractAddress).catch();
   },
   async suggestSToken() {
@@ -109,8 +115,11 @@ let tokenProperties = {
   getBondById(id) {
     return this.bonds.find((element) => element.id === id);
   },
+  getBondByName(name) {
+    return this.bonds.find((element) => element.name === name);
+  },
 
-  //Computations
+  //Computations for the Calculator view
   getRebaseROIfromAPY(apy) {
     return Math.exp(Math.log(1 + apy / 100) / 365 / 3) - 1;
   },
@@ -127,7 +136,7 @@ let tokenProperties = {
     );
   },
   async getPotentialReturn(options) {
-    let reward_estimations = await this.getRewardsEstimation(options)
+    let reward_estimations = await this.getRewardsEstimation(options);
     return (
       reward_estimations * options.futurePrice -
       options.amount * options.purchasePrice
@@ -136,8 +145,26 @@ let tokenProperties = {
   async getCurrentWealth(options) {
     return options.balance * options.purchasePrice;
   },
-  getRebaseReturn() {
-    return 0.00715;
+  hrefToTxHash(hash) {
+    return `https://secretnodes.com/secret/chains/${keplrOptions.chainId}/transactions/${hash}`;
+  },
+  hrefToAddress(address) {
+    return `https://secretnodes.com/secret/chains/${keplrOptions.chainId}/accounts/${address}`;
+  },
+  linkToTxHash(hash, text = "Check out the transaction here") {
+    let link = `<a href="${this.hrefToTxHash(hash)}" target="_blank">
+          ${text} <i class="fas fa-external-link-alt"></i>
+      </a>`;
+    return link;
+  },
+  linkToAddress(address, text = "More info on your secretnodes page") {
+    if(address==undefined){
+      address = getUserAddressSync();
+    }
+    let link = `<a target="_blank" href="${this.hrefToAddress(address)}">
+    ${text} <i class="fas fa-external-link-alt"></i>
+    </a>`;
+    return link;
   },
 };
 Object.assign(appInstance.config.globalProperties, tokenProperties);

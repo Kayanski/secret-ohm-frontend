@@ -16,7 +16,7 @@
         </div>
         <div class="col-xs-12 col-sm-6 col-xl-4 col-lg-4">
           <stats-card
-            :title="tokenPriceText()"
+            :title="tokenName + ' Price'"
             type="gradient-orange"
             sub-title="true"
             class="mb-4"

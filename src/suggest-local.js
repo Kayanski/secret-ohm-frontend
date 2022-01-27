@@ -1,11 +1,21 @@
 export async function SuggestLocalChain() {
   let chainId = "pulsar-2";
+  //let chainId = "enigma-pub-testnet-3";
   await window.keplr
     .experimentalSuggestChain({
       chainId: chainId,
+
       chainName: "Secret Testnet",
-      rpc: "https://rpc.pulsar.griptapejs.com/",
-      rest: "http://testnet.securesecrets.org:1317/",
+      //rpc: "http://rpc.pulsar.griptapejs.com/",
+      //rest: "http://testnet.securesecrets.org:1317/",
+      rpc: "https://api.ovaldao.space/rpc/",
+      rest: "https://api.ovaldao.space:80",
+
+      /*
+      chainName: "Local Testnet",
+      rpc: "http://localhost:26656",
+      rest: "http://localhost:1337",
+       */
       bip44: {
         coinType: 529,
       },

@@ -1,3 +1,4 @@
+you
 <template>
   <router-link to="/bonds">
     <i class="ni ni-fat-remove close-modal"></i>
@@ -24,9 +25,11 @@
             name: 'sUST',
             address: 'secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek',
           }"
+          :contractName="bond.principle"
           buttonText="Bond"
           @submitTokenInput="buyBond"
           @tokenInput="tokenInputValue = $event"
+          ref="bondInput"
         />
 
         <div class="row bond-info-container">
@@ -44,6 +47,7 @@
                 :options="{
                   bondName: bond.name,
                   amount: tokenInputValue,
+                  contractName: tokenName,
                 }"
               />
             </div>
@@ -53,16 +57,36 @@
     </tab-pane>
     <tab-pane title="Redeem">
       <div class="get-bond-container container">
-        <form class="bond-form">
-          <token-input
-            :token="{
-              name: 'sUST',
-              address: 'secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek',
-            }"
-            buttonText="Redeem"
-            @submitTokenInput="redeemBond"
-          />
-        </form>
+        <div class="bond-button-container col-xs-12 col-sm-10 col-md-6 row">
+          <div class="col-12">
+            <button
+              class="btn btn-outline-primary btn-submit"
+              type="button"
+              @click="redeemBond(false)"
+            >
+              <span :class="{ 'd-none': redeeming }">Redeem</span>
+              <easy-spinner
+                :class="[{ 'd-none': !redeeming }, 'spinner']"
+                type="circular"
+                size="20"
+              />
+            </button>
+          </div>
+          <div class="col-12">
+            <button
+              class="btn btn-outline-primary btn-submit"
+              type="button"
+              @click="redeemBond(true)"
+            >
+              <span :class="{ 'd-none': redeeming }">Redeem and Stake</span>
+              <easy-spinner
+                :class="[{ 'd-none': !redeeming }, 'spinner']"
+                type="circular"
+                size="20"
+              />
+            </button>
+          </div>
+        </div>
 
         <div class="row bond-info-container">
           <div
@@ -78,6 +102,7 @@
                 :infoId="bondInfo.id"
                 :options="{
                   bondName: bond.name,
+                  contractName: bond.name,
                 }"
               />
             </div>
@@ -89,6 +114,8 @@
 </template>
 
 <script>
+import * as KeplrClient from "@/client";
+import * as Format from "@/formatHelper";
 export default {
   props: ["bondId"],
   data() {
@@ -148,6 +175,7 @@ export default {
         },
       ],
       tokenInputValue: undefined,
+      redeeming: false,
     };
   },
   computed: {
@@ -167,21 +195,59 @@ export default {
     },
   },
   methods: {
-    pendingRewardsText() {
-      return (
-        this.pendingRewards.toLocaleString(undefined, {
-          maximumFractionDigits: 5,
-          minimumFractionDigits: 5,
-        }) +
-        " " +
-        this.tokenName
-      );
-    },
     buyBond(e) {
+      KeplrClient.bond(this.bond.name, e, 60000)
+        .then((result) => {
+          this.expressSuccess(
+            `Bond, status : ${
+              JSON.parse(new Buffer.from(result.data).toString()).send.status
+            }<br/>
+            ${this.linkToTxHash(
+              result.transactionHash
+            )}`
+          );
+          this.$refs.bondInput.submitted();
+        })
+        .catch((error) => {
+          this.catchError("bonding", error,this.linkToAddress());
+          this.$refs.bondInput.submitted();
+        });
       console.log("Bond : " + e);
     },
-    redeemBond(e) {
-      console.log("Redeem : " + e);
+    async redeemBond(stake) {
+      console.log(stake);
+      this.redeeming = true;
+      let decimals = await KeplrClient.getDecimals(this.tokenName);
+      KeplrClient.redeem(this.bond.name, stake)
+        .then((result) => {
+          console.log(
+            "test",
+            result,
+            JSON.parse(new Buffer.from(result.data).toString()).redeem.payout
+          );
+          this.expressSuccess(
+            `Redeem, Successfully redeemed : ${Format.formatToken(
+              parseInt(
+                JSON.parse(new Buffer.from(result.data).toString()).redeem
+                  .payout
+              ) / Math.pow(10, decimals),
+              4,
+              this.tokenName
+            )}<br/>
+            ${this.linkToTxHash(
+              result.transactionHash
+            )}`
+          );
+          this.redeeming = false;
+        })
+        .catch((error) => {
+          this.catchError(
+            "redeeming bond",
+            error,
+            this.linkToAddress()
+          );
+          this.redeeming = false;
+        });
     },
   },
   beforeCreated() {
@@ -209,6 +275,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  align-items: center;
 }
 .bond-input {
 }
@@ -232,5 +299,10 @@ export default {
 }
 .bond-tabs .nav-link {
   border-bottom-color: white;
+}
+.bond-button-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 </style>

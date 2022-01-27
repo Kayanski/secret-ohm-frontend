@@ -5,10 +5,10 @@
         <div class="copyright text-center text-lg-left text-muted">
           © {{ year }}
           <a
-            href="https://www.creative-tim.com"
+            href="https://ovaldao.space"
             class="font-weight-bold ml-1"
             target="_blank"
-            >Creative Tim</a
+            >Oval DAO</a
           >
         </div>
       </div>
@@ -17,27 +17,13 @@
           class="nav nav-footer justify-content-center justify-content-lg-end"
         >
           <li class="nav-item">
-            <a
-              href="https://www.creative-tim.com"
-              class="nav-link"
-              target="_blank"
-              >Creative Tim</a
-            >
-          </li>
-          <li class="nav-item">
-            <a
-              href="https://www.creative-tim.com/presentation"
-              class="nav-link"
-              target="_blank"
+            <a href="https://ovaldao.space/" class="nav-link" target="_blank"
               >About Us</a
             >
           </li>
           <li class="nav-item">
-            <a
-              href="https://www.creative-tim.com/blog"
-              class="nav-link"
-              target="_blank"
-              >Blog</a
+            <a href="https://ovaldao.space/" class="nav-link" target="_blank"
+              >Code</a
             >
           </li>
           <li class="nav-item">
@@ -45,7 +31,7 @@
               href="https://www.creative-tim.com/license"
               class="nav-link"
               target="_blank"
-              >License</a
+              >UI License</a
             >
           </li>
         </ul>

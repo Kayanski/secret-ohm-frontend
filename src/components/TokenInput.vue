@@ -1,25 +1,20 @@
 <template>
-  <form
-    @submit="$emit('submitTokenInput', tokenEntered)"
-    class="container token-input"
-  >
+  <form @submit="submitTokenInput" class="container token-input">
     <div class="row balance">
       <div class="col">
         <span> Balance: </span>
-        <span
-          v-if="viewingKey == null"
-          class="view-balance-button"
-          @click="addViewingKey"
-        >
-          🔍 View Balance
-        </span>
-        <span v-else-if="tokenBalance != null">
-          {{ tokenBalance }} <strong>{{ token.name }} </strong>
-        </span>
 
-        <span v-else class="balance-not-arrived"> </span>
+        <info-field
+          infoId="token-balance"
+          :options="{
+            contractName: contractName,
+            specialTextClass: 'font-weight-bold',
+          }"
+          @valueAvailable="updateBalance"
+        />
       </div>
     </div>
+
     <div class="form-container">
       <div class="input-group-token col-xl-6 col-lg-7 col-md-8 col-xs-12">
         <div class="input-group">
@@ -96,7 +91,12 @@
 
       <div class="col-xs-12 col-sm-12 col-md-auto">
         <button class="btn btn-outline-primary btn-submit" type="submit">
-          {{ buttonText }}
+          <span :class="{ 'd-none': submitting }">{{ buttonText }}</span>
+          <easy-spinner
+            :class="[{ 'd-none': !submitting }, 'spinner']"
+            type="circular"
+            size="20"
+          />
         </button>
       </div>
     </div>
@@ -104,13 +104,17 @@
 </template>
 
 <script>
+import { getContractFromName } from "@/client";
 export default {
   name: "token-input",
   data() {
+    let token = getContractFromName(this.contractName);
     return {
+      token: token,
       viewingKey: null,
       tokenBalance: null,
       tokenEntered: null,
+      submitting: false,
       isActiveBefore: {
         25: false,
         50: false,
@@ -126,24 +130,24 @@ export default {
     };
   },
   props: {
-    token: {
-      type: Object,
-      description: "Token properties",
-      default: undefined,
-    },
     buttonText: {
       type: String,
       description: "read the name pls",
       default: undefined,
     },
+    contractName: {
+      type: String,
+      description: "read the name pls",
+      default: "OHM",
+    },
   },
   computed: {
     tokenText() {
-      return this.token.name + " Amount";
+      return this.contractName + " Amount";
     },
     percentage() {
-      if (this.tokenBalance) {
-        return this.tokenEntered / this.tokenBalance;
+      if (this.tokenBalance && this.tokenEntered) {
+        return this.tokenEntered / Number(this.tokenBalance);
       } else {
         return 0;
       }
@@ -166,11 +170,13 @@ export default {
   },
   watch: {
     tokenEntered(newVal) {
-      if (!(this.tokenBalance && newVal <= this.tokenBalance)) {
-        this.tokenEntered = this.tokenBalance;
-      }
+      console.log(newVal, this.tokenBalance);
       if (this.tokenBalance) {
-        let percentage = this.tokenEntered / this.tokenBalance;
+        if (!(newVal <= this.tokenBalance)) {
+          this.tokenEntered = this.tokenBalance;
+        }
+        console.log(typeof Number(this.tokenBalance), typeof this.tokenEntered);
+        let percentage = this.tokenEntered / Number(this.tokenBalance);
         let closeQuarter = Math.floor(percentage * 4);
         this.resetisActiveBefore();
         this.resetisActive();
@@ -183,23 +189,23 @@ export default {
     },
   },
   methods: {
-    addViewingKey() {
-      this.suggestToken(this.token.address, this.token.name);
+    submitTokenInput() {
+      if(!this.submitting){
+        this.submitting = true;
+        this.$emit("submitTokenInput", this.tokenEntered);
+      }else{
+        this.catchError("clicking a button","You can't click an action button twice, please finish what you are doing first","",2000);
+      }
     },
-    async tokenBalanceFetch() {
-      /*
-      this.viewingKey = await window.keplr
-        .getSecret20ViewingKey(this.chainId, this.token.address)
-        .catch(() => {
-          console.log("not viewung key");
-          return null;
-        });
-        */
-      this.tokenBalance = this.viewingKey;
-      //await new Promise(resolve => setTimeout(resolve, 100));
-      this.viewingKey = 465;
-      //await new Promise(resolve => setTimeout(resolve, 5552500));
-      this.tokenBalance = 465.45;
+    submitted() {
+      this.submitting = false;
+      console.log("FINISEHD");
+    },
+    updateBalance(event) {
+      this.tokenBalance = event.value;
+    },
+    addViewingKey() {
+      this.suggestToken(this.token.contractAddress, this.contractName);
     },
     resetisActive() {
       Object.entries(this.isActive).forEach(function (percent) {
@@ -226,9 +232,6 @@ export default {
     inputIsNow(percent) {
       this.tokenEntered = (parseInt(percent, 10) * this.tokenBalance) / 100;
     },
-  },
-  async mounted() {
-    this.tokenBalanceFetch();
   },
 };
 </script>
@@ -331,5 +334,11 @@ input[type="number"] {
 .btn-submit {
   align-self: flex-start;
   width: 100%;
+}
+.btn-submit:hover {
+  color: white !important;
+}
+.spinner {
+  margin-left: 0px !important;
 }
 </style>

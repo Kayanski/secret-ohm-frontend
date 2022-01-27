@@ -8,17 +8,16 @@
       <navbar-toggle-button @click="showSidebar">
         <span class="navbar-toggler-icon"></span>
       </navbar-toggle-button>
-      <router-link class="navbar-brand" to="/">
-        <img :src="logo" class="navbar-brand-img" alt="..." />
-      </router-link>
 
       <slot name="mobile-right">
         <ul class="nav align-items-center d-lg-none">
           <base-dropdown class="nav-link pr-0">
             <template v-slot:title>
               <div class="media align-items-center pointed">
-                <span class="avatar avatar-sm rounded-circle">
-                  <img alt="Image placeholder" src="img/theme/token-img.svg" />
+                <span
+                  class="avatar avatar-sm rounded-circle avatar-token-white"
+                >
+                  <img alt="Image placeholder" src="img/theme/svg.svg" />
                 </span>
                 <div class="media-body ml-2 d-block">
                   <span class="mb-0 text-sm font-weight-bold"></span>
@@ -60,9 +59,8 @@
                   >Connect Keplr</span
                 >
                 <span v-else class="mb-0 text-sm font-weight-bold"
-                  >{{ displayAddress }} | <strong>{{ tokenBalance }}</strong>
-                  {{ tokenName }}</span
-                >
+                  >{{ displayAddress }}
+                </span>
               </div>
             </div>
           </li>
@@ -99,28 +97,31 @@
         <!--Navigation-->
         <ul class="navbar-nav mb-md-3">
           <li class="nav-item">
-            <a
-              class="nav-link"
-              href="https://demos.creative-tim.com/vue-argon-dashboard/documentation"
-            >
-              <i class="ni ni-spaceship"></i> Getting started
-            </a>
+            <sidebar-item
+              :link="{
+                name: 'Documentation',
+                icon: 'ni ni-spaceship',
+                path: '/stake',
+              }"
+            />
           </li>
           <li class="nav-item">
-            <a
-              class="nav-link"
-              href="https://demos.creative-tim.com/vue-argon-dashboard/documentation/foundation/colors.html"
-            >
-              <i class="ni ni-palette"></i> Foundation
-            </a>
+            <sidebar-item
+              :link="{
+                name: 'Foundation',
+                icon: 'ni ni-palette',
+                path: '/stake',
+              }"
+            />
           </li>
           <li class="nav-item">
-            <a
-              class="nav-link"
-              href="https://demos.creative-tim.com/vue-argon-dashboard/documentation/components/alerts.html"
-            >
-              <i class="ni ni-ui-04"></i> Components
-            </a>
+            <sidebar-item
+              :link="{
+                name: 'Components',
+                icon: 'ni ni-ui-04',
+                path: '/stake',
+              }"
+            />
           </li>
         </ul>
       </div>
@@ -129,7 +130,7 @@
 </template>
 <script>
 import NavbarToggleButton from "@/components/NavbarToggleButton";
-import KeplrClient from "@/client";
+import * as KeplrClient from "@/client";
 
 export default {
   name: "sidebar",
@@ -149,10 +150,11 @@ export default {
         "Whether sidebar should autoclose on mobile when clicking an item",
     },
   },
-  computed: {
-    keplrConnected() {
-      return KeplrClient.keplrConnected;
-    },
+  data() {
+    return {
+      keplrConnected: false,
+      displayAddress: undefined,
+    };
   },
   provide() {
     return {
@@ -172,5 +174,18 @@ export default {
       this.$sidebar.showSidebar = false;
     }
   },
+  created() {
+    KeplrClient.getUserAddressText().then((addressText) => {
+      console.log("quid");
+      this.keplrConnected = true;
+      this.displayAddress = addressText;
+    });
+  },
 };
 </script>
+<style>
+.avatar-token-white {
+  background: white;
+  border: solid 1px black;
+}
+</style>

@@ -17,7 +17,9 @@
                 </object>
               </span>
               <div class="media-body ml-2 d-block">
-                <span class="mb-0 text-sm font-weight-bold">Token</span>
+                <span class="mb-0 text-sm font-weight-bold">{{
+                  tokenName
+                }}</span>
               </div>
             </div>
           </template>
@@ -75,12 +77,11 @@ export default {
       showMenu: false,
       searchQuery: "",
       keplrConnected: false,
+      userAddressText: false,
+      displayAddress: undefined,
     };
   },
   computed: {
-    displayAddress() {
-      return KeplrClient.getUserAddressText();
-    },
     tokenBalance() {
       return KeplrClient.getBalance("OHM");
     },
@@ -96,13 +97,15 @@ export default {
       this.showMenu = !this.showMenu;
     },
     async connectKeplr() {
-      KeplrClient.initSigningClient()
-        .then(() => {
-          console.log("initclient");
-          this.keplrConnected = KeplrClient.keplrConnected();
-        })
-        .catch((error) => console.log(error));
+      await KeplrClient.initSigningClient();
     },
+  },
+  created() {
+    KeplrClient.getUserAddressText().then((addressText) => {
+      console.log("quid");
+      this.keplrConnected = true;
+      this.displayAddress = addressText;
+    });
   },
 };
 </script>
